@@ -49,11 +49,11 @@
               </button>
             </div>
 
-            <div class="luna-stage" aria-label="露娜公主站在魔法花园中">
+            <div class="luna-stage" aria-label="露娜公主站在魔法城堡中">
               <div class="cloud cloud-a" aria-hidden="true"></div><div class="cloud cloud-b" aria-hidden="true"></div>
               <div class="castle" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
               <div class="magic-orb orb-a" aria-hidden="true"></div><div class="magic-orb orb-b" aria-hidden="true"></div>
-              <div class="home-oc-avatar" id="homeOcAvatar" aria-label="露娜 OC-English 角色"></div>
+              <div class="home-oc-avatar" id="homeOcAvatar" aria-label="露娜角色"></div>
               <div class="ground" aria-hidden="true"><span></span><span></span><span></span></div>
               <div class="speech-bubble"><span id="speechChildName">Hi, 荆宝!</span><button type="button" class="mini-speak" data-say="Hi, 荆宝! Let's make magic!" aria-label="播放露娜说的话"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4Zm12.5 2A4.5 4.5 0 0 0 14 8v2a2.5 2.5 0 0 1 0 4v2a4.5 4.5 0 0 0 2.5-4Z"/></svg></button></div>
             </div>
@@ -65,7 +65,7 @@
               <div class="daily-copy"><p>今日探险清单</p><strong id="dailyMissionTitle">完成 3 个小目标</strong><ul id="dailyTaskList" class="daily-task-list"></ul></div>
             </article>
             <article class="lesson-card">
-              <div class="lesson-card-copy"><p>今天的主题</p><h2 id="todayThemeName">Color Magic</h2><span id="todayThemeMeta">颜色魔法 · 3 分钟</span></div>
+              <div class="lesson-card-copy"><p>今天的主题</p><h2 id="todayThemeName">色彩魔法</h2><span id="todayThemeMeta">颜色魔法 · 3 分钟</span></div>
               <div class="color-vials" aria-hidden="true"><i></i><i></i><i></i></div>
               <button class="text-button" type="button" id="playToday">去玩 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
             </article>
@@ -76,9 +76,8 @@
         <section class="screen" id="lessonScreen" aria-labelledby="lessonTitle">
           <div class="lesson-layout">
             <aside class="lesson-side">
-              <button class="back-button" type="button" data-screen="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>花园</button>
-              <p class="section-kicker">今天的魔法课</p><h1 id="lessonTitle">Color<br />Magic</h1>
-              <p>跟着露娜听一听、找一找、说一说。</p>
+              <button class="back-button" type="button" data-screen="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>魔法城堡</button>
+              <div class="lesson-title-row"><h1 id="lessonTitle">色彩魔法</h1></div>
               <div class="progress-label"><span id="progressLabel">第 1 关，共 3 关</span><b id="progressStars">0 / 3</b></div>
               <div class="progress-track"><span id="progressFill"></span></div>
               <div class="lesson-group-switcher" id="lessonGroupSwitcher" hidden aria-label="学习分组"></div>
@@ -86,7 +85,6 @@
             </aside>
 
             <section class="game-panel" aria-live="polite">
-              <div class="game-topline"><span class="round-chip" id="roundChip">听一听</span><button class="speak-button" id="promptSpeak" type="button" aria-label="再听一次"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4Zm12.5 2A4.5 4.5 0 0 0 14 8v2a2.5 2.5 0 0 1 0 4v2a4.5 4.5 0 0 0 2.5-4Z"/></svg>再听一次</button></div>
               <div id="gameArea"></div>
             </section>
           </div>
@@ -94,16 +92,16 @@
 
         <section class="screen" id="closetScreen" aria-labelledby="closetTitle">
           <div class="closet-layout oc-closet-layout">
-            <div class="closet-header"><div><p class="section-kicker">露娜的衣帽间</p><h1 id="closetTitle">闪闪衣橱</h1><p>完成学习魔法，收集新的 OC-English 装扮。</p></div><button class="back-button purple-back" type="button" data-screen="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>花园</button></div>
+            <div class="closet-header"><div><p class="section-kicker">露娜的衣帽间</p><h1 id="closetTitle">闪闪衣橱</h1><p>完成学习魔法，收集新的露娜装扮。</p></div><button class="back-button purple-back" type="button" data-screen="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>魔法城堡</button></div>
             <div class="oc-closet-content">
-              <section class="oc-avatar-stage" aria-label="OC-English 角色试穿预览">
+              <section class="oc-avatar-stage" aria-label="露娜角色试穿预览">
                 <span class="oc-stage-label">我的 OC</span>
                 <div class="oc-sparkles" aria-hidden="true"><i>✦</i><i>✦</i><i>✦</i></div>
                 <div id="ocAvatar" class="oc-avatar"></div>
                 <p id="ocLookName">点一点右边的装扮</p>
               </section>
               <section class="oc-wardrobe-panel" aria-labelledby="ocWardrobeTitle">
-                <div class="oc-panel-title"><div><span>OC-ENGLISH · DRESS UP</span><h2 id="ocWardrobeTitle">我的装扮盒</h2></div><b id="ocCollectionCount">0 / 0</b></div>
+                <div class="oc-panel-title"><div><span>露娜的魔法衣橱</span><h2 id="ocWardrobeTitle">我的装扮盒</h2></div><b id="ocCollectionCount">0 / 0</b></div>
                 <div class="oc-category-tabs" id="ocCategoryTabs" role="tablist" aria-label="衣橱类别"></div>
                 <div class="oc-item-grid" id="ocItemGrid"></div>
               </section>
@@ -113,7 +111,7 @@
       </main>
 
       <nav class="bottom-nav" aria-label="主要导航">
-        <button class="nav-item active" type="button" data-screen="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3l8.5 7.5V20a1 1 0 0 1-1 1h-5v-6H9.5v6h-5a1 1 0 0 1-1-1v-9.5Z"/></svg><span>魔法花园</span></button>
+        <button class="nav-item active" type="button" data-screen="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3l8.5 7.5V20a1 1 0 0 1-1 1h-5v-6H9.5v6h-5a1 1 0 0 1-1-1v-9.5Z"/></svg><span>魔法城堡</span></button>
         <button class="nav-item" type="button" data-screen="lesson"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v17.5H7.5A2.5 2.5 0 0 0 5 22V4.5Zm2.5 0A.5.5 0 0 0 7 5v14.5c.16-.04.33-.06.5-.06H18V4.5H7.5Z"/><path d="M10 8h5M10 12h5"/></svg><span>魔法课堂</span></button>
         <button class="nav-item" type="button" data-screen="closet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a2 2 0 0 1 2 2c0 .9-.6 1.68-1.42 1.92L18 12v7.5H6V12l5.42-5.08A2 2 0 0 1 10 5a2 2 0 0 1 2-2Z"/><path d="M6 12h12"/></svg><span>闪闪衣橱</span><i class="new-dot" id="newDot" hidden></i></button>
       </nav>
@@ -147,7 +145,7 @@
     <div class="modal" id="achievementModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="achievementTitle"><div class="modal-card achievement-modal"><button class="modal-close icon-button" id="closeAchievements" type="button" aria-label="关闭徽章墙">×</button><p class="section-kicker">魔法城堡</p><h2 id="achievementTitle">我的徽章墙</h2><div id="achievementList" class="achievement-list"></div></div></div>
     <div class="modal" id="hanziBookModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="hanziBookTitle"><div class="modal-card hanzi-book-modal"><button class="modal-close icon-button" id="closeHanziBook" type="button" aria-label="关闭汉字收藏册">×</button><p class="section-kicker">汉字图书塔</p><h2 id="hanziBookTitle">我的发光书页</h2><p class="parent-note">收集已经认识的汉字和词组。</p><div id="hanziBookList" class="hanzi-book-list"></div></div></div>
     <div class="modal daily-modal" id="dailyModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="dailyTitle">
-      <div class="reward-card daily-wrap-card"><p class="section-kicker">今天完成啦</p><h2 id="dailyTitle">魔法任务全完成！</h2><p id="dailyWrapCopy">明天也来和露娜一起学英文吧。</p><div class="daily-streak-badge">连续学习 <b id="dailyWrapStreak">1</b> 天</div><div class="daily-wrap-actions"><button class="secondary-button" id="dailyWrapHome" type="button">回到花园</button><button class="primary-button" id="dailyWrapCloset" type="button">去衣橱看看</button></div></div>
+      <div class="reward-card daily-wrap-card"><p class="section-kicker">今天完成啦</p><h2 id="dailyTitle">魔法任务全完成！</h2><p id="dailyWrapCopy">明天也来和露娜一起学英文吧。</p><div class="daily-streak-badge">连续学习 <b id="dailyWrapStreak">1</b> 天</div><div class="daily-wrap-actions"><button class="secondary-button" id="dailyWrapHome" type="button">回到魔法城堡</button><button class="primary-button" id="dailyWrapCloset" type="button">去衣橱看看</button></div></div>
     </div>
     <div class="modal reward-modal" id="rewardModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="rewardTitle">
       <div class="reward-card">
