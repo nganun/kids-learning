@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">魔法城堡</title>
+  <desc id="desc">透明背景的紫金色魔法城堡</desc>
+  <defs>
+    <linearGradient id="wall" x1="115" y1="120" x2="395" y2="430" gradientUnits="userSpaceOnUse"><stop stop-color="#d7c8ff"/><stop offset="1" stop-color="#9479d4"/></linearGradient>
+    <linearGradient id="roof" x1="145" y1="84" x2="355" y2="260" gradientUnits="userSpaceOnUse"><stop stop-color="#f5b9df"/><stop offset="1" stop-color="#bc79c8"/></linearGradient>
+    <linearGradient id="gold" x1="121" y1="135" x2="402" y2="421" gradientUnits="userSpaceOnUse"><stop stop-color="#fff4af"/><stop offset=".5" stop-color="#ffd16a"/><stop offset="1" stop-color="#d88c31"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-18%" width="140%" height="145%"><feDropShadow dx="0" dy="11" stdDeviation="8" flood-color="#4a3474" flood-opacity=".28"/></filter>
+  </defs>
+  <g filter="url(#shadow)" stroke="#674687" stroke-linejoin="round">
+    <path d="M92 418h328v34H92z" fill="url(#gold)" stroke-width="12"/>
+    <path d="M113 418V280l68-62 68 62v138Z" fill="url(#wall)" stroke-width="12"/>
+    <path d="M221 418V205l70-84 70 84v213Z" fill="#c9b7f3" stroke-width="12"/>
+    <path d="M333 418V280l-68-62-68 62v138Z" fill="url(#wall)" stroke-width="12"/>
+    <path d="m135 280 46-93 46 93zm86-75 70-111 70 111zm156 75 46-93 46 93z" fill="url(#roof)" stroke-width="12"/>
+    <path d="M148 187v-45l34 23zm126-93V43l37 25zm139 93v-45l34 23z" fill="#ef78a6" stroke-width="9"/>
+    <path d="M246 418v-68c0-40 90-40 90 0v68Z" fill="#704b93" stroke-width="11"/>
+  </g>
+  <g fill="url(#gold)" stroke="#674687" stroke-width="8"><rect x="148" y="310" width="27" height="38" rx="12"/><rect x="277" y="238" width="30" height="41" rx="13"/><rect x="370" y="310" width="27" height="38" rx="12"/></g>
+  <path d="m290 139 10 23 25 4-18 18 4 25-21-12-22 12 5-25-19-18 25-4z" fill="#fff5ad" stroke="#674687" stroke-width="7" stroke-linejoin="round"/>
+</svg>

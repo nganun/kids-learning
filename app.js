@@ -6,10 +6,10 @@ const CHILD_NAME = '荆宝';
 let deferredInstallPrompt = null;
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-const save = (key, value) => localStorage.setItem(key, JSON.stringify(value));
-const load = (key, fallback) => {
-  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
-};
+const storageGet = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
+const save = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { showToast?.('这台设备暂时无法保存学习记录。'); return false; } };
+const saveText = (key, value) => { try { localStorage.setItem(key, value); return true; } catch { showToast?.('这台设备暂时无法保存学习记录。'); return false; } };
+const load = (key, fallback) => { try { return JSON.parse(storageGet(key)) ?? fallback; } catch { return fallback; } };
 
 let THEMES = {
   color: { id: 'color', title: 'Color Magic', subtitle: '颜色魔法', words: ['red', 'yellow', 'blue'], rewards: ['hat_crown', 'top_dress', 'bottom_tutu', 'shoes_glass', 'back_wings'],
@@ -142,6 +142,7 @@ function createProfile(name = CHILD_NAME) {
     activeTheme: 'color',
     completedThemes: [],
     learnedWords: [],
+    wordProgress: {},
     stars: 0,
     dailyDate: localDateKey(),
     daily: freshDaily(),
@@ -153,10 +154,10 @@ function createProfile(name = CHILD_NAME) {
 }
 function migrateLegacyProfile() {
   const profile = createProfile(CHILD_NAME);
-  const legacyDate = localStorage.getItem('luna-daily-date');
-  profile.activeTheme = localStorage.getItem('luna-active-theme') || profile.activeTheme;
+  const legacyDate = storageGet('luna-daily-date');
+  profile.activeTheme = storageGet('luna-active-theme') || profile.activeTheme;
   profile.completedThemes = load('luna-completed-themes', []);
-  profile.stars = Number(localStorage.getItem('luna-stars') || 0);
+  profile.stars = Number(storageGet('luna-stars') || 0);
   profile.dailyDate = legacyDate || localDateKey();
   profile.daily = legacyDate === localDateKey() ? load('luna-daily-tasks', freshDaily()) : freshDaily();
   profile.ocOwned = load('luna-oc-owned', profile.ocOwned);
@@ -165,17 +166,17 @@ function migrateLegacyProfile() {
 }
 let profiles = load('luna-profiles-v1', []);
 if (!Array.isArray(profiles) || !profiles.length) profiles = [migrateLegacyProfile()];
-let activeProfileId = localStorage.getItem('luna-active-profile-id') || profiles[0].id;
+let activeProfileId = storageGet('luna-active-profile-id') || profiles[0].id;
 if (!profiles.some((profile) => profile.id === activeProfileId)) activeProfileId = profiles[0].id;
-const todayKey = localDateKey();
+let todayKey = localDateKey();
 function activeProfile() { return profiles.find((profile) => profile.id === activeProfileId) || profiles[0]; }
 function childName() { return activeProfile()?.name || CHILD_NAME; }
 function dailyFor(profile) { return profile.dailyDate === todayKey ? profile.daily : freshDaily(); }
 const initialProfile = activeProfile();
 const state = {
-  screen: 'home', soundOn: true, childFriendlyVoice: localStorage.getItem('luna-child-friendly-voice') !== 'false', round: 0, completed: false, roundLocked: false,
+  screen: 'home', soundOn: true, childFriendlyVoice: storageGet('luna-child-friendly-voice') !== 'false', round: 0, completed: false, roundLocked: false,
   activeTheme: initialProfile.activeTheme || 'color', lessonMode: 'learn',
-  completedThemes: initialProfile.completedThemes || [], learnedWords: initialProfile.learnedWords || [],
+  completedThemes: initialProfile.completedThemes || [], learnedWords: initialProfile.learnedWords || [], wordProgress: initialProfile.wordProgress || {},
   stars: Number(initialProfile.stars || 0), daily: dailyFor(initialProfile),
   streak: initialProfile.streak || { count: 0, lastCompletedDate: '' },
   recordingEnabled: Boolean(initialProfile.recordingEnabled),
@@ -185,7 +186,7 @@ const state = {
 function syncActiveProfile() {
   const profile = activeProfile();
   Object.assign(profile, {
-    activeTheme: state.activeTheme, completedThemes: state.completedThemes, learnedWords: state.learnedWords,
+    activeTheme: state.activeTheme, completedThemes: state.completedThemes, learnedWords: state.learnedWords, wordProgress: state.wordProgress,
     stars: state.stars, dailyDate: todayKey, daily: state.daily, streak: state.streak,
     recordingEnabled: state.recordingEnabled, ocOwned: state.ocOwned, ocAvatar: state.ocAvatar,
   });
@@ -193,7 +194,7 @@ function syncActiveProfile() {
 function persistProgress() {
   syncActiveProfile();
   save('luna-profiles-v1', profiles);
-  localStorage.setItem('luna-active-profile-id', activeProfileId);
+  saveText('luna-active-profile-id', activeProfileId);
 }
 function saveOcAvatar() { persistProgress(); }
 function currentTheme() {
@@ -209,7 +210,7 @@ function switchProfile(id) {
   const profile = activeProfile();
   state.activeTheme = profile.activeTheme || 'color';
   state.completedThemes = profile.completedThemes || [];
-  state.learnedWords = profile.learnedWords || [];
+  state.learnedWords = profile.learnedWords || []; state.wordProgress = profile.wordProgress || {};
   state.stars = Number(profile.stars || 0);
   state.daily = dailyFor(profile);
   state.streak = profile.streak || { count: 0, lastCompletedDate: '' };
@@ -306,8 +307,10 @@ function showToast(text) {
   const toast = $('#toast'); toast.textContent = text; toast.classList.add('show');
   clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove('show'), 2200);
 }
-function setScreen(name) {
+function routeFor(name) { return name === 'lesson' ? `#lesson/${state.activeTheme}` : `#${name}`; }
+function setScreen(name, { push = true } = {}) {
   state.screen = name;
+  if (push && location.hash !== routeFor(name)) history.pushState({ screen: name, theme: state.activeTheme }, '', routeFor(name));
   $('.app-shell').classList.toggle('home-active', name === 'home');
   $$('.screen').forEach((screen) => screen.classList.toggle('active', screen.id === `${name}Screen`));
   $$('.nav-item').forEach((button) => button.classList.toggle('active', button.dataset.screen === name));
@@ -316,6 +319,9 @@ function setScreen(name) {
   $('#main').focus({ preventScroll: true });
 }
 
+function refreshDailyBoundary() { const next = localDateKey(); if (next !== todayKey) { todayKey = next; state.daily = dailyFor(activeProfile()); persistProgress(); renderHome(); updateProgress(); } }
+function masteredWordCount() { return Object.values(state.wordProgress).filter((item) => item.mastered).length; }
+function recordWordProgress(word, kind) { const key = `${state.activeTheme}:${word}`; const item = state.wordProgress[key] || { learn: 0, review: 0, mastered: false, dueDate: todayKey }; if (kind === 'learn') item.learn += 1; else item.review += 1; item.lastSeen = todayKey; item.mastered = item.learn >= 1 && item.review >= 2; item.dueDate = item.mastered ? new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10) : todayKey; state.wordProgress[key] = item; }
 function updateDailyStreak() {
   const previous = state.streak.lastCompletedDate;
   if (previous === todayKey) return;
@@ -351,6 +357,14 @@ function mountHomeMap() {
   const scene = $('.garden-scene'); const map = $('.theme-map');
   if (scene && map && map.parentElement !== scene) scene.append(map);
 }
+function themeNeedsReview(theme) {
+  return theme.words.some((word) => { const progress = state.wordProgress[`${theme.id}:${word}`]; return progress?.mastered && progress.dueDate <= todayKey; });
+}
+function recommendedThemeId() {
+  const due = Object.values(THEMES).find(themeNeedsReview);
+  if (due) return due.id;
+  return Object.values(THEMES).find((theme) => !state.completedThemes.includes(theme.id))?.id || state.activeTheme;
+}
 function renderHome() {
   const theme = currentTheme();
   $('#childNameGreeting').textContent = childName();
@@ -363,12 +377,14 @@ function renderHome() {
   $('#dailyMissionTitle').textContent = state.daily.claimed ? '今天的礼物已收到！' : '完成 3 个小目标';
   const tasks = [ ['round', '完成 1 个魔法小游戏'], ['theme', '完成 1 个魔法主题'], ['dress', '在衣橱换 1 件装扮'] ];
   $('#dailyTaskList').innerHTML = tasks.map(([id, label]) => `<li class="${state.daily[id] ? 'done' : ''}"><span>${state.daily[id] ? '✓' : '○'}</span>${label}</li>`).join('');
+  const recommended = recommendedThemeId();
   $('#themeCards').innerHTML = Object.values(THEMES).map((theme) => {
     const done = state.completedThemes.includes(theme.id);
+    const reviewDue = themeNeedsReview(theme);
     const unavailable = state.lessonMode === 'review' && !done;
     const map = MAP_META[theme.id] || { name: theme.title, hint: theme.subtitle, icon: 'spark' };
     const status = state.lessonMode === 'review' ? (done ? '再次探险' : '先完成学习') : (done ? '已经点亮 · 再去看看' : map.hint);
-    return `<button class="theme-card map-node map-${theme.id} ${theme.id === state.activeTheme ? 'active' : ''} ${unavailable ? 'needs-learning' : ''}" type="button" data-theme="${theme.id}" aria-label="${map.name}，${status}"><span class="theme-orb map-icon">${mapIcon(map.icon)}</span><span class="map-copy"><strong>${map.name}</strong></span></button>`;
+    return `<button class="theme-card map-node map-${theme.id} ${theme.id === state.activeTheme ? 'active' : ''} ${unavailable ? 'needs-learning' : ''} ${theme.id === recommended ? 'recommended' : ''} ${reviewDue ? 'review-due' : ''}" type="button" data-theme="${theme.id}" aria-label="${map.name}，${status}"><span class="theme-orb map-icon">${mapIcon(map.icon)}</span><span class="map-copy"><strong>${map.name}</strong></span></button>`;
   }).join('');
   $$('[data-theme]').forEach((button) => button.addEventListener('click', () => selectTheme(button.dataset.theme, true)));
   $$('[data-lesson-mode]').forEach((button) => {
@@ -388,14 +404,14 @@ function updateProgress() {
   const theme = currentTheme(); const total = currentRounds().length;
   $('#starTotal').textContent = 18 + state.stars;
   $('#parentStars').textContent = state.stars;
-  $('#parentWords').textContent = state.learnedWords.length;
+  $('#parentWords').textContent = masteredWordCount();
   $('#parentStreak').textContent = state.streak.count;
   $('#progressStars').textContent = `${Math.min(state.round, total)} / ${total}`;
   $('#progressLabel').textContent = state.completed ? (state.lessonMode === 'review' ? '复习完成啦！' : '魔法完成啦！') : `第 ${state.round + 1} 关，共 ${total} 关`;
   $('#progressFill').style.width = `${(Math.min(state.round, total) / total) * 100}%`;
 }
 
-function startLearnCountdown(seconds = 10) {
+function startLearnCountdown(seconds = 3) {
   const button = $('#learnNext');
   const label = $('#learnNextLabel');
   const progress = $('#learnCountdownProgress');
@@ -462,10 +478,10 @@ function renderRound() {
   const area = $('#gameArea');
   if (game.type === 'learn') {
     const recordingAction = state.recordingEnabled ? '<button class="record-practice" id="recordPractice" type="button">跟我说一说</button><div id="practicePlayback"></div>' : '';
-    area.innerHTML = `<div class="learn-word-card"><img src="${game.image}" alt="${game.word} 的图片" /><div><p>${currentTheme().id === 'hanzi' ? '看一看，听一听' : 'Look and listen'}</p><h2>${game.word}</h2><strong class="word-translation">中文：${(WORD_TRANSLATIONS[game.word] || game.word)}</strong><span>${game.zh}</span></div><button class="primary-button" id="learnNext" type="button" disabled aria-disabled="true"><span class="learn-next-copy"><span id="learnNextLabel">先听一听（10）</span><span class="learn-countdown-track" aria-hidden="true"><i id="learnCountdownProgress"></i></span></span><svg viewBox="0 0 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button></div>${sentenceMarkup(game.word)}${recordingAction}`;
+    area.innerHTML = `<div class="learn-word-card"><img src="${game.image}" alt="${game.word} 的图片" /><div><p>${currentTheme().id === 'hanzi' ? '看一看，听一听' : 'Look and listen'}</p><h2>${game.word}</h2><strong class="word-translation">中文：${(WORD_TRANSLATIONS[game.word] || game.word)}</strong><span>${game.zh}</span></div><button class="primary-button" id="learnNext" type="button" disabled aria-disabled="true"><span class="learn-next-copy"><span id="learnNextLabel">先听一听（3）</span><span class="learn-countdown-track" aria-hidden="true"><i id="learnCountdownProgress"></i></span></span><svg viewBox="0 0 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button></div>${sentenceMarkup(game.word)}${recordingAction}`;
     $('#learnNext').addEventListener('click', () => handleCorrect(game.word, 'learn'));
     $('#recordPractice')?.addEventListener('click', recordPractice);
-    startLearnCountdown(10);
+    startLearnCountdown(3);
   } else if (game.type === 'listen') {
     area.innerHTML = `<div class="match-word-card"><img src="${game.image}" alt="${game.word} 的图片" /><div class="game-copy"><h2>Listen<br /><em>and find</em></h2><strong class="match-translation">中文：${game.zh}</strong><p>先听一遍，再点图片。</p></div></div><button class="review-listen-action" id="reviewListenAction" type="button">听一听 <svg viewBox="0 0 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4Zm12.5 2A4.5 4.5 0 0 0 14 8v2a2.5 2.5 0 0 1 0 4v2a4.5 4.5 0 0 0 2.5-4Z"/></svg></button><div class="picture-choice-row">${game.choices.map((choice) => `<button class="picture-choice" type="button" data-choice="${choice}"><img src="${wordImage(choice)}" alt="${(WORD_TRANSLATIONS[choice] || choice)}" /><b>${(WORD_TRANSLATIONS[choice] || choice)}</b></button>`).join('')}</div>`;
     $('#reviewListenAction').addEventListener('click', () => { speakForCurrentTheme(game.word); $$('.picture-choice', area).forEach((button) => button.classList.add('attention')); setTimeout(() => $$('.picture-choice', area).forEach((button) => button.classList.remove('attention')), 900); });
@@ -516,6 +532,7 @@ function handleCorrect(word, kind = 'match') {
   if (state.roundLocked) return;
   state.roundLocked = true; state.round += 1; state.stars += 1;
   if (kind === 'learn') { state.learnedWords = Array.from(new Set([...state.learnedWords, word])); showWordCelebration(word); }
+  recordWordProgress(word, kind);
   setDailyTask('round'); playSuccessChime(); showToast(`你认识了 ${word}！`); persistProgress(); updateProgress();
   setTimeout(() => {
     if (state.round >= currentRounds().length) { if (state.lessonMode === 'review') completeReview(); else completeTheme(); }
@@ -613,7 +630,7 @@ function closeParent() {
   $('#parentModal').classList.remove('open'); $('#parentModal').setAttribute('aria-hidden', 'true'); $('#parentButton').focus();
 }
 function openAdmin() { $('#adminModal').classList.add('open'); $('#adminModal').setAttribute('aria-hidden', 'false'); $('#adminGate').hidden = false; $('#adminContent').hidden = true; $('#adminPin').value = ''; $('#adminError').hidden = true; setTimeout(() => $('#adminPin').focus(), 100); }
-function closeAdmin() { $('#adminModal').classList.remove('open'); $('#adminModal').setAttribute('aria-hidden', 'true'); $('#adminButton').focus(); }
+function closeAdmin() { $('#adminModal').classList.remove('open'); $('#adminModal').setAttribute('aria-hidden', 'true'); $('#parentButton').focus(); }
 function unlockAdmin() { $('#adminGate').hidden = true; $('#adminContent').hidden = false; $('#adminEnglish').value = (adminContent.english || ADMIN_DEFAULT.english).join(', '); $('#adminHanzi').value = (adminContent.hanzi || ADMIN_DEFAULT.hanzi).join('，'); $('#adminNewPin').value = ''; }
 function saveAdminContent() {
   const english = safeEnglishWords($('#adminEnglish').value); const hanzi = safeHanzi($('#adminHanzi').value); const pin = $('#adminNewPin').value.trim();
@@ -699,20 +716,28 @@ $('#installApp').addEventListener('click', async () => {
 });
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').catch(() => {
+    navigator.serviceWorker.register('./service-worker.js').then((registration) => {
+      if (registration.waiting) showToast('城堡有新内容，重新打开后即可使用。');
+      registration.addEventListener('updatefound', () => {
+        const worker = registration.installing;
+        worker?.addEventListener('statechange', () => { if (worker.state === 'installed' && navigator.serviceWorker.controller) showToast('城堡地图已更新，重新打开后即可使用。'); });
+      });
+    }).catch(() => {
       // The game remains fully usable online if an older browser cannot register a worker.
     });
   });
 }
 updateInstallButton();
 $('#voiceTest').addEventListener('click', () => { chooseEnglishVoice(); speak(`Hello, ${childName()}! I am Luna. Let us learn English together.`); });
-$('#childVoiceToggle').addEventListener('click', () => { state.childFriendlyVoice = !state.childFriendlyVoice; localStorage.setItem('luna-child-friendly-voice', String(state.childFriendlyVoice)); $('#childVoiceToggle').setAttribute('aria-pressed', String(state.childFriendlyVoice)); $('#childVoiceToggle').textContent = state.childFriendlyVoice ? '儿童感朗读：已开启' : '儿童感朗读：已关闭'; showToast(state.childFriendlyVoice ? '已使用更慢、更明亮的朗读方式。' : '已使用标准英语朗读方式。'); });
+$('#childVoiceToggle').addEventListener('click', () => { state.childFriendlyVoice = !state.childFriendlyVoice; saveText('luna-child-friendly-voice', String(state.childFriendlyVoice)); $('#childVoiceToggle').setAttribute('aria-pressed', String(state.childFriendlyVoice)); $('#childVoiceToggle').textContent = state.childFriendlyVoice ? '儿童感朗读：已开启' : '儿童感朗读：已关闭'; showToast(state.childFriendlyVoice ? '已使用更慢、更明亮的朗读方式。' : '已使用标准英语朗读方式。'); });
 $('#childVoiceToggle').setAttribute('aria-pressed', String(state.childFriendlyVoice)); $('#childVoiceToggle').textContent = state.childFriendlyVoice ? '儿童感朗读：已开启' : '儿童感朗读：已关闭';
 $('#claimReward').addEventListener('click', () => { closeReward(); $('#newDot').hidden = false; setScreen('closet'); showToast('新的 OC-English 装扮已经放进衣橱！'); });
 $('#dailyWrapHome').addEventListener('click', () => { closeDailyWrapUp(); setScreen('home'); });
 $('#dailyWrapCloset').addEventListener('click', () => { closeDailyWrapUp(); setScreen('closet'); });
 $('#parentModal').addEventListener('click', (event) => { if (event.target === $('#parentModal')) closeParent(); });
 $('#resetProgress').addEventListener('click', () => { state.round = 0; state.completed = false; state.roundLocked = false; closeParent(); setScreen('home'); showToast('今天的挑战已经从第一关重新开始。'); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshDailyBoundary(); });
+window.addEventListener('popstate', () => { const [,screen = 'home', theme] = location.hash.match(/^#([^/]+)\/?(.*)?/) || []; if (theme && THEMES[theme]) state.activeTheme = theme; setScreen(['home','lesson','closet'].includes(screen) ? screen : 'home', { push: false }); });
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('#parentModal').classList.contains('open')) closeParent(); if (event.key === 'Escape' && $('#rewardModal').classList.contains('open')) closeReward(); if (event.key === 'Escape' && $('#dailyModal').classList.contains('open')) closeDailyWrapUp(); if (event.key === 'Escape' && $('#adminModal').classList.contains('open')) closeAdmin(); });
 
-$('.app-shell').classList.add('home-active'); mountHomeMap(); renderWardrobe(); renderHome(); updateProgress(); renderParentProfileControls();
+$('.app-shell').classList.add('home-active'); mountHomeMap(); renderWardrobe(); renderHome(); updateProgress(); renderParentProfileControls(); if (location.hash) window.dispatchEvent(new PopStateEvent('popstate'));

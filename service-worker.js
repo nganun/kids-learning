@@ -1,8 +1,9 @@
-const CACHE_NAME = 'magic-castle-v24';
+const CACHE_NAME = 'magic-castle-__BUILD_ID__';
 const APP_SHELL = [
   './',
   './index.html',
   './style.css',
+  './styles/home-map.css',
   './app.js',
   './manifest.webmanifest',
   './assets/icons/app-icon-192.png',
@@ -60,6 +61,15 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  // CSS and JS use network-first so visual fixes are never held behind an old offline cache.
+  if (url.pathname.endsWith('/style.css') || url.pathname.endsWith('/app.js')) {
+    event.respondWith(fetch(request).then((response) => {
+      if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
+      return response;
+    }).catch(() => caches.match(request)));
+    return;
+  }
 
   event.respondWith(
     caches.match(request).then((cached) => cached || fetch(request).then((response) => {

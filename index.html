@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="魔法城堡" />
     <meta name="description" content="魔法城堡：适合幼儿的多学科启蒙小游戏。" />
-    <link rel="icon" href="assets/brand/magic-castle-logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="assets/icons/app-icon-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="assets/icons/app-icon-192.png" />
     <link rel="manifest" href="manifest.webmanifest" />
     <title>魔法城堡</title>
@@ -17,6 +17,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="styles/home-map.css" />
   </head>
   <body>
     <a class="skip-link" href="#main">跳到主要内容</a>
@@ -141,7 +142,7 @@
         </section>
       </div>
     </div>
-    <div class="modal" id="adminModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="adminTitle"><div class="modal-card parent-modal-card"><button class="modal-close icon-button" id="closeAdmin" type="button" aria-label="关闭管理员设置">×</button><section id="adminGate"><p class="section-kicker">管理员入口</p><h2 id="adminTitle">内容管理</h2><form id="adminGateForm" class="parent-gate-form"><label for="adminPin">请输入管理员 PIN</label><input id="adminPin" type="password" inputmode="numeric" autocomplete="off" required /><button class="primary-button" type="submit">进入设置</button></form><p id="adminError" class="parent-gate-error" hidden>PIN 不正确。</p></section><section id="adminContent" hidden><p class="section-kicker">管理员设置</p><h2>学习内容</h2><p class="parent-note">英文单词、汉字或词组可使用中文逗号、英文逗号、中文分号、英文分号或换行分隔。汉字和词组会按填写顺序显示。默认 PIN 是 2468，请首次进入后修改。</p><label class="admin-field">英文学习内容<textarea id="adminEnglish" rows="4"></textarea></label><label class="admin-field">汉字与词组学习内容<textarea id="adminHanzi" rows="4" placeholder="人，大人；人口"></textarea></label><label class="admin-field">新的管理员 PIN<input id="adminNewPin" type="password" inputmode="numeric" maxlength="12" placeholder="至少 4 位数字" /></label><button id="saveAdminContent" class="primary-button" type="button">保存学习内容</button></section></div></div>
+    <div class="modal" id="adminModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="adminTitle"><div class="modal-card parent-modal-card"><button class="modal-close icon-button" id="closeAdmin" type="button" aria-label="关闭管理员设置">×</button><section id="adminGate"><p class="section-kicker">管理员入口</p><h2 id="adminTitle">内容管理</h2><form id="adminGateForm" class="parent-gate-form"><label for="adminPin">请输入管理员 PIN</label><input id="adminPin" type="password" inputmode="numeric" autocomplete="off" required /><button class="primary-button" type="submit">进入设置</button></form><p id="adminError" class="parent-gate-error" hidden>PIN 不正确。</p></section><section id="adminContent" hidden><p class="section-kicker">管理员设置</p><h2>学习内容</h2><p class="parent-note">英文单词、汉字或词组可使用中文逗号、英文逗号、中文分号、英文分号或换行分隔。汉字和词组会按填写顺序显示。管理员 PIN 仅用于避免儿童误触，请在首次进入后设置自己的 PIN。</p><label class="admin-field">英文学习内容<textarea id="adminEnglish" rows="4"></textarea></label><label class="admin-field">汉字与词组学习内容<textarea id="adminHanzi" rows="4" placeholder="人，大人；人口"></textarea></label><label class="admin-field">新的管理员 PIN<input id="adminNewPin" type="password" inputmode="numeric" maxlength="12" placeholder="至少 4 位数字" /></label><button id="saveAdminContent" class="primary-button" type="button">保存学习内容</button></section></div></div>
     <div class="modal daily-modal" id="dailyModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="dailyTitle">
       <div class="reward-card daily-wrap-card"><p class="section-kicker">今天完成啦</p><h2 id="dailyTitle">魔法任务全完成！</h2><p id="dailyWrapCopy">明天也来和露娜一起学英文吧。</p><div class="daily-streak-badge">连续学习 <b id="dailyWrapStreak">1</b> 天</div><div class="daily-wrap-actions"><button class="secondary-button" id="dailyWrapHome" type="button">回到花园</button><button class="primary-button" id="dailyWrapCloset" type="button">去衣橱看看</button></div></div>
     </div>

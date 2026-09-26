@@ -25,6 +25,8 @@ jobs:
         uses: actions/checkout@v6
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+      - name: Stamp offline cache version
+        run: sed -i "s/__BUILD_ID__/${{ github.sha }}/g" service-worker.js
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
         with:
