@@ -68,7 +68,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   // CSS and JS use network-first so visual fixes are never held behind an old offline cache.
-  if (url.pathname.endsWith('/style.css') || url.pathname.endsWith('/app.js')) {
+  if (url.pathname.endsWith('/style.css') || url.pathname.endsWith('/styles/home-map.css') || url.pathname.endsWith('/app.js')) {
     event.respondWith(fetch(request).then((response) => {
       if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
       return response;
