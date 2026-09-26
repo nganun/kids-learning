@@ -96,3 +96,9 @@
 
 /* Tighter soft-focus halo on narrow screens. */
 @media(max-width:600px){.app-shell.home-active .luna-stage::before{width:118px;height:166px}}
+
+/* Daily route gives a child one clear next adventure without hiding free map choice. */
+.daily-route{position:absolute;z-index:7;left:50%;bottom:14px;transform:translateX(-50%);min-height:38px;padding:0 15px;border:3px solid #fff;border-radius:999px;background:rgba(255,248,195,.93);color:#684792;font-weight:900;box-shadow:0 4px 0 rgba(102,70,146,.2);white-space:nowrap}@media(max-width:600px){.daily-route{bottom:8px;min-height:31px;padding:0 10px;font-size:10px;border-width:2px}}
+
+/* Desktop full-bleed map: adapt the artwork to the browser viewport instead of preserving side letterbox bars. */
+@media(min-width:601px){.app-shell.home-active .theme-map{place-items:stretch}.app-shell.home-active .theme-cards{width:100%;max-width:none;height:100%;max-height:none;aspect-ratio:auto;background-size:cover;background-position:center center}}

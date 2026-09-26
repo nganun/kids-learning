@@ -1,6 +1,7 @@
 import { getPartOptions, renderCharacterSVG } from './assets/oc-english/character.js';
 import { wardrobeThumb } from './assets/oc-english/wardrobe.js';
 import { OC_WARDROBE } from './assets/oc-english/wardrobe-data.js';
+import { ACHIEVEMENT_DEFINITIONS, unlockAchievementIds } from './features/achievements.js';
 
 const CHILD_NAME = '荆宝';
 let deferredInstallPrompt = null;
@@ -58,6 +59,7 @@ let THEMES = {
       { type: 'match', chip: '魔法复习', prompt: 'Which word matches?', word: 'one', image: 'assets/vocabulary/one.svg', zh: '看数量，选出对应的英文单词。', choices: ['one', 'two'], correct: 'one' },
       { type: 'listen', chip: '听音找一找', prompt: 'Find two!', word: 'two', image: 'assets/vocabulary/two.svg', zh: '听一听，找到对应的数量图片。', choices: ['one', 'two'], correct: 'two' },
       { type: 'match', chip: '魔法复习', prompt: 'Which word matches?', word: 'three', image: 'assets/vocabulary/three.svg', zh: '看数量，选出对应的英文单词。', choices: ['two', 'three'], correct: 'three' },
+      { type: 'action', chip: '数字动作', prompt: 'Clap three times!', word: 'three', image: 'assets/vocabulary/clap.svg', zh: '跟着露娜拍三下手，完成后点“我做完啦”。', actionLabel: '我做完啦' },
     ],
   },
 };
@@ -86,6 +88,10 @@ const WORD_TRANSLATIONS = {
   jump: '跳一跳', clap: '拍拍手', dance: '跳舞',
   one: '一', two: '二', three: '三',
 };
+const HANZI_SCENES = {
+  '大人': { label: '大人牵着小朋友', art: 'adult' }, '人口': { label: '小镇里的许多人', art: 'people' }, '小猫': { label: '花圃旁的小猫', art: 'cat' }, '太阳': { label: '天空中的太阳', art: 'sun' },
+};
+function hanziSceneMarkup(word) { const scene = HANZI_SCENES[word]; return scene ? `<div class="hanzi-scene scene-${scene.art}" aria-label="${scene.label}"><i></i><i></i><i></i><span>${scene.label}</span></div>` : ''; }
 const WORD_SENTENCES = {
   red: { text: 'It is red.', zh: '它是红色的。' }, yellow: { text: 'It is yellow.', zh: '它是黄色的。' }, blue: { text: 'It is blue.', zh: '它是蓝色的。' },
   cat: { text: 'A little cat.', zh: '一只小猫。' }, dog: { text: 'A happy dog.', zh: '一只开心的小狗。' }, rabbit: { text: 'A little rabbit.', zh: '一只小兔子。' },
@@ -124,6 +130,20 @@ const OC_CATEGORY_META = [
   { id: 'earring', label: '耳饰', slot: 'earring' },
 ];
 const OC_PART_OPTIONS = getPartOptions();
+function wardrobeIcon(category) {
+  const paths = {
+    hair: '<path d="M5 11c0-5 3-8 7-8s7 3 7 8v5H5z"/><path d="M7 11c1 2 2 3 2 6m6-6c-1 2-2 3-2 6"/>',
+    hat: '<path d="M7 11V8a5 5 0 0 1 10 0v3"/><path d="M4 12h16l-2 4H6z"/>',
+    glasses: '<circle cx="8" cy="12" r="4"/><circle cx="16" cy="12" r="4"/><path d="M12 12h0M4 10l-2-1m18 1 2-1"/>',
+    top: '<path d="m8 5 4 3 4-3 4 4-3 3v7H7v-7L4 9z"/>',
+    bottom: '<path d="M7 4h10l-1 15h-3l-1-7-1 7H8z"/>',
+    shoes: '<path d="M5 15h7l2-4 3 4c2 0 3 1 3 3H5z"/>',
+    held: '<path d="M12 21V9"/><path d="m12 12-4-4m4 1 4-4"/><circle cx="8" cy="7" r="2"/><circle cx="16" cy="5" r="2"/>',
+    back: '<path d="M12 20V8"/><path d="M11 11C7 5 3 7 5 12c1 3 4 4 6 4M13 11c4-6 8-4 6 1-1 3-4 4-6 4"/>',
+    earring: '<path d="M12 4v5"/><circle cx="12" cy="15" r="4"/><circle cx="12" cy="4" r="1"/>',
+  };
+  return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[category] || paths.hat}</svg>`;
+}
 const starterAvatar = { skin: 0, hair: 3, hairColor: 3, eyes: 0, eyeColor: 2, mouth: 0, showBlush: true, outfit: { hat: '', glasses: '', top: 'top_starter', bottom: 'bottom_starter', shoes: 'shoes_starter', held: 'held_flower', back: '', earring: '' } };
 const cloneStarterAvatar = () => JSON.parse(JSON.stringify(starterAvatar));
 
@@ -148,6 +168,7 @@ function createProfile(name = CHILD_NAME) {
     daily: freshDaily(),
     streak: { count: 0, lastCompletedDate: '' },
     recordingEnabled: false,
+    world: {}, achievements: [], study: { date: localDateKey(), seconds: 0, limitMinutes: 5, backupAt: '' },
     ocOwned: ['top_starter', 'bottom_starter', 'shoes_starter', 'held_flower'],
     ocAvatar: cloneStarterAvatar(),
   };
@@ -179,7 +200,7 @@ const state = {
   completedThemes: initialProfile.completedThemes || [], learnedWords: initialProfile.learnedWords || [], wordProgress: initialProfile.wordProgress || {},
   stars: Number(initialProfile.stars || 0), daily: dailyFor(initialProfile),
   streak: initialProfile.streak || { count: 0, lastCompletedDate: '' },
-  recordingEnabled: Boolean(initialProfile.recordingEnabled),
+  recordingEnabled: Boolean(initialProfile.recordingEnabled), world: initialProfile.world || {}, achievements: initialProfile.achievements || [], study: initialProfile.study || { date: todayKey, seconds: 0, limitMinutes: 5, backupAt: '' },
   ocTab: 'hair', ocOwned: initialProfile.ocOwned || ['top_starter', 'bottom_starter', 'shoes_starter', 'held_flower'],
   ocAvatar: initialProfile.ocAvatar || cloneStarterAvatar(),
 };
@@ -188,7 +209,7 @@ function syncActiveProfile() {
   Object.assign(profile, {
     activeTheme: state.activeTheme, completedThemes: state.completedThemes, learnedWords: state.learnedWords, wordProgress: state.wordProgress,
     stars: state.stars, dailyDate: todayKey, daily: state.daily, streak: state.streak,
-    recordingEnabled: state.recordingEnabled, ocOwned: state.ocOwned, ocAvatar: state.ocAvatar,
+    recordingEnabled: state.recordingEnabled, world: state.world, achievements: state.achievements, study: state.study, ocOwned: state.ocOwned, ocAvatar: state.ocAvatar,
   });
 }
 function persistProgress() {
@@ -214,7 +235,7 @@ function switchProfile(id) {
   state.stars = Number(profile.stars || 0);
   state.daily = dailyFor(profile);
   state.streak = profile.streak || { count: 0, lastCompletedDate: '' };
-  state.recordingEnabled = Boolean(profile.recordingEnabled);
+  state.recordingEnabled = Boolean(profile.recordingEnabled); state.world = profile.world || {}; state.achievements = profile.achievements || []; state.study = profile.study || { date: todayKey, seconds: 0, limitMinutes: 5, backupAt: '' };
   state.ocOwned = profile.ocOwned || [];
   state.ocAvatar = profile.ocAvatar || cloneStarterAvatar();
   state.round = 0; state.completed = false; state.roundLocked = false;
@@ -309,19 +330,27 @@ function showToast(text) {
 }
 function routeFor(name) { return name === 'lesson' ? `#lesson/${state.activeTheme}` : `#${name}`; }
 function setScreen(name, { push = true } = {}) {
+  refreshDailyBoundary();
+  if (state.screen === 'lesson' && name !== 'lesson') finishLessonSession();
+  if (name === 'lesson' && !canStartLesson()) { showToast('今天的探险时间已完成，明天再来吧！'); name = 'home'; }
   state.screen = name;
   if (push && location.hash !== routeFor(name)) history.pushState({ screen: name, theme: state.activeTheme }, '', routeFor(name));
   $('.app-shell').classList.toggle('home-active', name === 'home');
   $$('.screen').forEach((screen) => screen.classList.toggle('active', screen.id === `${name}Screen`));
   $$('.nav-item').forEach((button) => button.classList.toggle('active', button.dataset.screen === name));
-  if (name === 'lesson') renderRound();
+  if (name === 'lesson') { lessonSessionStartedAt = Date.now(); renderRound(); }
   if (name === 'closet') renderWardrobe();
   $('#main').focus({ preventScroll: true });
 }
 
-function refreshDailyBoundary() { const next = localDateKey(); if (next !== todayKey) { todayKey = next; state.daily = dailyFor(activeProfile()); persistProgress(); renderHome(); updateProgress(); } }
+function refreshDailyBoundary() { const next = localDateKey(); if (next !== todayKey) { todayKey = next; state.daily = dailyFor(activeProfile()); state.study = { ...state.study, date: next, seconds: 0 }; persistProgress(); renderHome(); updateProgress(); } }
 function masteredWordCount() { return Object.values(state.wordProgress).filter((item) => item.mastered).length; }
 function recordWordProgress(word, kind) { const key = `${state.activeTheme}:${word}`; const item = state.wordProgress[key] || { learn: 0, review: 0, mastered: false, dueDate: todayKey }; if (kind === 'learn') item.learn += 1; else item.review += 1; item.lastSeen = todayKey; item.mastered = item.learn >= 1 && item.review >= 2; item.dueDate = item.mastered ? new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10) : todayKey; state.wordProgress[key] = item; }
+function refreshAchievements() { unlockAchievementIds(state, masteredWordCount()).forEach((id) => { if (!state.achievements.includes(id)) { state.achievements.push(id); const label = ACHIEVEMENT_DEFINITIONS.find((item) => item.id === id)?.label || '新徽章'; showToast(`获得徽章：${label}！`); } }); }
+let lessonSessionStartedAt = null;
+function studyTodaySeconds() { return state.study.date === todayKey ? state.study.seconds : 0; }
+function finishLessonSession() { if (!lessonSessionStartedAt) return; state.study.seconds += Math.floor((Date.now() - lessonSessionStartedAt) / 1000); lessonSessionStartedAt = null; persistProgress(); }
+function canStartLesson() { const limit = Number(state.study.limitMinutes || 0); return !limit || studyTodaySeconds() < limit * 60; }
 function updateDailyStreak() {
   const previous = state.streak.lastCompletedDate;
   if (previous === todayKey) return;
@@ -365,6 +394,11 @@ function recommendedThemeId() {
   if (due) return due.id;
   return Object.values(THEMES).find((theme) => !state.completedThemes.includes(theme.id))?.id || state.activeTheme;
 }
+function dailyRouteThemes() {
+  const due = Object.values(THEMES).filter(themeNeedsReview).slice(0, 2).map((theme) => theme.id);
+  const fresh = Object.values(THEMES).find((theme) => !state.completedThemes.includes(theme.id));
+  return Array.from(new Set([...due, fresh?.id].filter(Boolean))).slice(0, 3);
+}
 function renderHome() {
   const theme = currentTheme();
   $('#childNameGreeting').textContent = childName();
@@ -378,6 +412,10 @@ function renderHome() {
   const tasks = [ ['round', '完成 1 个魔法小游戏'], ['theme', '完成 1 个魔法主题'], ['dress', '在衣橱换 1 件装扮'] ];
   $('#dailyTaskList').innerHTML = tasks.map(([id, label]) => `<li class="${state.daily[id] ? 'done' : ''}"><span>${state.daily[id] ? '✓' : '○'}</span>${label}</li>`).join('');
   const recommended = recommendedThemeId();
+  const route = dailyRouteThemes();
+  const routeButton = $('#dailyRoute');
+  routeButton.hidden = !route.length;
+  if (route.length) { const next = THEMES[route[0]]; routeButton.dataset.theme = next.id; routeButton.textContent = `今日路线：先去${MAP_META[next.id]?.name || next.title}`; }
   $('#themeCards').innerHTML = Object.values(THEMES).map((theme) => {
     const done = state.completedThemes.includes(theme.id);
     const reviewDue = themeNeedsReview(theme);
@@ -387,6 +425,7 @@ function renderHome() {
     return `<button class="theme-card map-node map-${theme.id} ${theme.id === state.activeTheme ? 'active' : ''} ${unavailable ? 'needs-learning' : ''} ${theme.id === recommended ? 'recommended' : ''} ${reviewDue ? 'review-due' : ''}" type="button" data-theme="${theme.id}" aria-label="${map.name}，${status}"><span class="map-copy"><strong>${map.name}</strong></span></button>`;
   }).join('');
   $$('[data-theme]').forEach((button) => button.addEventListener('click', () => selectTheme(button.dataset.theme, true)));
+  $('#dailyRoute').onclick = () => selectTheme($('#dailyRoute').dataset.theme, true);
   $$('[data-lesson-mode]').forEach((button) => {
     const active = button.dataset.lessonMode === state.lessonMode;
     button.classList.toggle('active', active); button.setAttribute('aria-selected', String(active));
@@ -465,7 +504,7 @@ function hanziLearnMarkup(game, recordingAction) {
   const parts = [...game.word];
   const related = parts.length > 1 ? parts : currentTheme().words.filter((item) => item !== game.word && item.includes(game.word)).slice(0, 2);
   const relatedMarkup = related.length ? related.map((item) => `<span>${item}</span>`).join('') : '<span>今天读一读</span>';
-  return `<article class="hanzi-spellbook"><p class="hanzi-book-kicker">汉字图书塔 · 会说话的书页</p><button class="hanzi-glyph" id="hanziSpeak" type="button" aria-label="朗读 ${game.word}"><b>${game.word}</b><small>点一下，听读音</small></button><p class="hanzi-read-copy">${game.zh}</p><div class="hanzi-word-trail"><em>${parts.length > 1 ? '拆开看看' : '认识词组'}</em><div>${relatedMarkup}</div></div><button class="primary-button" id="learnNext" type="button" disabled aria-disabled="true"><span class="learn-next-copy"><span id="learnNextLabel">先听一听（3）</span><span class="learn-countdown-track" aria-hidden="true"><i id="learnCountdownProgress"></i></span></span><svg viewBox="0 0 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>${recordingAction}</article>`;
+  return `<article class="hanzi-spellbook"><p class="hanzi-book-kicker">汉字图书塔 · 会说话的书页</p><button class="hanzi-glyph" id="hanziSpeak" type="button" aria-label="朗读 ${game.word}"><b>${game.word}</b><small>点一下，听读音</small></button><p class="hanzi-read-copy">${game.zh}</p>${hanziSceneMarkup(game.word)}<div class="hanzi-word-trail"><em>${parts.length > 1 ? '拆开看看' : '认识词组'}</em><div>${relatedMarkup}</div></div><button class="primary-button" id="learnNext" type="button" disabled aria-disabled="true"><span class="learn-next-copy"><span id="learnNextLabel">先听一听（3）</span><span class="learn-countdown-track" aria-hidden="true"><i id="learnCountdownProgress"></i></span></span><svg viewBox="0 0 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>${recordingAction}</article>`;
 }
 function sentenceMarkup(word) {
   const sentence = WORD_SENTENCES[word];
@@ -491,6 +530,10 @@ function renderRound() {
     $('#hanziSpeak')?.addEventListener('click', () => speakChinese(game.word));
     $('#recordPractice')?.addEventListener('click', recordPractice);
     startLearnCountdown(3);
+  } else if (game.type === 'action') {
+    area.innerHTML = `<div class="number-action-card"><img src="${game.image}" alt="拍手动作" /><div><p>数字动作</p><h2>${game.prompt}</h2><strong>${game.zh}</strong></div><button class="primary-button" id="actionDone" type="button">${game.actionLabel || '我做完啦'}</button></div>`;
+    $('#actionDone').addEventListener('click', () => handleCorrect(game.word, 'action'));
+    speak(game.prompt);
   } else if (game.type === 'listen') {
     area.innerHTML = `<div class="match-word-card"><img src="${game.image}" alt="${game.word} 的图片" /><div class="game-copy"><h2>Listen<br /><em>and find</em></h2><strong class="match-translation">中文：${game.zh}</strong><p>先听一遍，再点图片。</p></div></div><button class="review-listen-action" id="reviewListenAction" type="button">听一听 <svg viewBox="0 0 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4Zm12.5 2A4.5 4.5 0 0 0 14 8v2a2.5 2.5 0 0 1 0 4v2a4.5 4.5 0 0 0 2.5-4Z"/></svg></button><div class="picture-choice-row">${game.choices.map((choice) => `<button class="picture-choice" type="button" data-choice="${choice}"><img src="${wordImage(choice)}" alt="${(WORD_TRANSLATIONS[choice] || choice)}" /><b>${(WORD_TRANSLATIONS[choice] || choice)}</b></button>`).join('')}</div>`;
     $('#reviewListenAction').addEventListener('click', () => { speakForCurrentTheme(game.word); $$('.picture-choice', area).forEach((button) => button.classList.add('attention')); setTimeout(() => $$('.picture-choice', area).forEach((button) => button.classList.remove('attention')), 900); });
@@ -542,6 +585,7 @@ function handleCorrect(word, kind = 'match') {
   state.roundLocked = true; state.round += 1; state.stars += 1;
   if (kind === 'learn') { state.learnedWords = Array.from(new Set([...state.learnedWords, word])); showWordCelebration(word); }
   recordWordProgress(word, kind);
+  refreshAchievements();
   setDailyTask('round'); playSuccessChime(); showToast(`你认识了 ${word}！`); persistProgress(); updateProgress();
   setTimeout(() => {
     if (state.round >= currentRounds().length) { if (state.lessonMode === 'review') completeReview(); else completeTheme(); }
@@ -555,6 +599,7 @@ function completeReview() {
 }
 function completeTheme() {
   const theme = currentTheme(); state.completed = true;
+  state.world[theme.id] = Math.max(state.world[theme.id] || 0, 2);
   state.completedThemes = Array.from(new Set([...state.completedThemes, theme.id]));
   state.ocOwned = Array.from(new Set([...state.ocOwned, ...theme.rewards]));
   saveOcAvatar(); setDailyTask('theme'); persistProgress(); $('#newDot').hidden = false;
@@ -576,11 +621,10 @@ function renderWardrobe() {
   $('#ocCollectionCount').textContent = `${state.ocOwned.length + 1} / ${OC_WARDROBE.length + OC_PART_OPTIONS.hair.length}`;
   const category = OC_CATEGORY_META.find((item) => item.id === state.ocTab);
   $('#ocLookName').textContent = '点一点右边的装扮，给露娜换新造型。';
-  $('#ocActionButton').textContent = category?.id === 'hair' ? '点这里，给露娜换发型' : `点这里，挑选${category?.label || '装扮'}`;
   renderOcTabs(); renderOcItems();
 }
 function renderOcTabs() {
-  $('#ocCategoryTabs').innerHTML = OC_CATEGORY_META.map((category) => `<button class="oc-category-tab ${state.ocTab === category.id ? 'active' : ''}" type="button" data-oc-tab="${category.id}">${category.label}</button>`).join('');
+  $('#ocCategoryTabs').innerHTML = OC_CATEGORY_META.map((category) => `<button class="oc-category-tab ${state.ocTab === category.id ? 'active' : ''}" type="button" data-oc-tab="${category.id}">${wardrobeIcon(category.id)}<span>${category.label}</span></button>`).join('');
   $$('[data-oc-tab]').forEach((button) => button.addEventListener('click', () => { state.ocTab = button.dataset.ocTab; renderOcTabs(); renderOcItems(); }));
 }
 function renderOcItems() {
@@ -616,6 +660,7 @@ function renderParentProfileControls() {
   select.innerHTML = profiles.map((profile) => `<option value="${profile.id}" ${profile.id === activeProfileId ? 'selected' : ''}>${profile.name}</option>`).join('');
   $('#recordingToggle').setAttribute('aria-pressed', String(state.recordingEnabled));
   $('#recordingToggle').textContent = state.recordingEnabled ? '录音跟读：已开启' : '录音跟读：已关闭';
+  $('#dailyLimitSelect').value = String(state.study.limitMinutes || 0); $('#parentStudyToday').textContent = `今天已探险 ${Math.floor(studyTodaySeconds() / 60)} 分钟`; $('#parentAchievements').textContent = state.achievements.length;
   updateProgress();
 }
 function prepareParentGate() {
@@ -651,7 +696,7 @@ function saveAdminContent() {
   persistProgress(); renderHome(); closeAdmin(); showToast('学习内容已保存，花园里出现了新的英文和汉字课程。');
 }
 function exportProgress() {
-  persistProgress();
+  state.study.backupAt = new Date().toISOString(); persistProgress();
   const payload = { version: 1, exportedAt: new Date().toISOString(), activeProfileId, profiles };
   const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
   const link = document.createElement('a'); link.href = url; link.download = `luna-learning-${todayKey}.json`; link.click();
@@ -668,7 +713,7 @@ async function importProgress(file) {
     const profile = activeProfile();
     state.activeTheme = profile.activeTheme || 'color'; state.completedThemes = profile.completedThemes || []; state.learnedWords = profile.learnedWords || [];
     state.stars = Number(profile.stars || 0); state.daily = dailyFor(profile); state.streak = profile.streak || { count: 0, lastCompletedDate: '' };
-    state.recordingEnabled = Boolean(profile.recordingEnabled); state.ocOwned = profile.ocOwned || []; state.ocAvatar = profile.ocAvatar || cloneStarterAvatar();
+    state.recordingEnabled = Boolean(profile.recordingEnabled); state.world = profile.world || {}; state.achievements = profile.achievements || []; state.study = profile.study || { date: todayKey, seconds: 0, limitMinutes: 5, backupAt: '' }; state.ocOwned = profile.ocOwned || []; state.ocAvatar = profile.ocAvatar || cloneStarterAvatar();
     state.round = 0; state.completed = false; state.roundLocked = false;
     persistProgress(); renderHome(); renderWardrobe(); renderParentProfileControls(); setScreen('home'); showToast('学习记录导入成功。');
   } catch {
@@ -676,16 +721,21 @@ async function importProgress(file) {
   }
 }
 
+function openHanziBook() { const entries = Object.entries(state.wordProgress).filter(([key]) => key.startsWith('hanzi:')).map(([key, item]) => ({ word: key.split(':')[1], item })); const groups = [['已掌握', entries.filter(({ item }) => item.mastered)], ['正在学习', entries.filter(({ item }) => !item.mastered && item.learn)], ['等待复习', entries.filter(({ item }) => item.mastered && item.dueDate <= todayKey)]]; $('#hanziBookList').innerHTML = entries.length ? groups.map(([label, words]) => words.length ? `<section><h3>${label}</h3><div>${words.map(({ word }) => `<article><b>${word}</b><span>${label}</span></article>`).join('')}</div></section>` : '').join('') : '<p class="hanzi-book-empty">先去汉字图书塔完成探险吧。</p>'; $('#hanziBookModal').classList.add('open'); $('#hanziBookModal').setAttribute('aria-hidden', 'false'); setTimeout(() => $('#closeHanziBook').focus(), 80); }
+function closeHanziBook() { $('#hanziBookModal').classList.remove('open'); $('#hanziBookModal').setAttribute('aria-hidden', 'true'); $('#hanziBookButton').focus(); }
+function openAchievements() { $('#achievementList').innerHTML = ACHIEVEMENT_DEFINITIONS.map(({ id, label }) => `<article class="${state.achievements.includes(id) ? 'earned' : ''}"><b>${state.achievements.includes(id) ? '✦' : '○'}</b><span>${label}</span><small>${state.achievements.includes(id) ? '已获得' : '继续探险解锁'}</small></article>`).join(''); $('#achievementModal').classList.add('open'); $('#achievementModal').setAttribute('aria-hidden', 'false'); setTimeout(() => $('#closeAchievements').focus(), 80); }
+function closeAchievements() { $('#achievementModal').classList.remove('open'); $('#achievementModal').setAttribute('aria-hidden', 'true'); $('#achievementButton').focus(); }
 $$('[data-screen]').forEach((button) => button.addEventListener('click', () => setScreen(button.dataset.screen)));
 $$('.mini-speak').forEach((button) => button.addEventListener('click', () => speak(button.dataset.say)));
 $('#playToday').addEventListener('click', () => selectTheme(state.activeTheme, true));
 $('#homePrimaryAction').addEventListener('click', () => selectTheme(state.activeTheme, true));
-$('#ocActionButton').addEventListener('click', () => { $('#ocItemGrid').classList.add('child-choice-focus'); $('#ocItemGrid').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); setTimeout(() => $('#ocItemGrid').classList.remove('child-choice-focus'), 1000); });
 $('#soundToggle').addEventListener('click', () => { state.soundOn = !state.soundOn; $('#soundToggle').setAttribute('aria-pressed', String(state.soundOn)); $('#soundToggle').setAttribute('aria-label', state.soundOn ? '关闭声音' : '打开声音'); $('#soundToggle').classList.toggle('muted', !state.soundOn); if (!state.soundOn) window.speechSynthesis?.cancel(); });
 $('#parentButton').addEventListener('click', openParent); $('#closeParent').addEventListener('click', closeParent);
 $('#parentGateForm').addEventListener('submit', (event) => { event.preventDefault(); if (Number($('#parentGateAnswer').value) === parentGateAnswer) unlockParent(); else { $('#parentGateError').hidden = false; $('#parentGateAnswer').select(); } });
 $('#profileSelect').addEventListener('change', (event) => switchProfile(event.target.value));
 $('#createProfile').addEventListener('click', () => { const input = $('#newProfileName'); const name = input.value.trim(); if (!name) { input.focus(); return; } const profile = createProfile(name); profiles.push(profile); input.value = ''; switchProfile(profile.id); showToast(`已为 ${profile.name} 建立新的学习档案。`); });
+$('#dailyLimitSelect').addEventListener('change', (event) => { state.study.limitMinutes = Number(event.target.value); persistProgress(); renderParentProfileControls(); showToast(state.study.limitMinutes ? `已设置每日 ${state.study.limitMinutes} 分钟探险时间。` : '已取消每日探险时间限制。'); });
+$('#hanziBookButton').addEventListener('click', openHanziBook); $('#closeHanziBook').addEventListener('click', closeHanziBook); $('#achievementButton').addEventListener('click', openAchievements); $('#closeAchievements').addEventListener('click', closeAchievements);
 $('#recordingToggle').addEventListener('click', () => { state.recordingEnabled = !state.recordingEnabled; persistProgress(); renderParentProfileControls(); showToast(state.recordingEnabled ? '已开启录音跟读；录音只留在当前页面。' : '已关闭录音跟读。'); });
 $('#adminButton').addEventListener('click', () => { closeParent(); openAdmin(); });
 $('#closeAdmin').addEventListener('click', closeAdmin);
@@ -747,6 +797,6 @@ $('#parentModal').addEventListener('click', (event) => { if (event.target === $(
 $('#resetProgress').addEventListener('click', () => { state.round = 0; state.completed = false; state.roundLocked = false; closeParent(); setScreen('home'); showToast('今天的挑战已经从第一关重新开始。'); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshDailyBoundary(); });
 window.addEventListener('popstate', () => { const [,screen = 'home', theme] = location.hash.match(/^#([^/]+)\/?(.*)?/) || []; if (theme && THEMES[theme]) state.activeTheme = theme; setScreen(['home','lesson','closet'].includes(screen) ? screen : 'home', { push: false }); });
-document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('#parentModal').classList.contains('open')) closeParent(); if (event.key === 'Escape' && $('#rewardModal').classList.contains('open')) closeReward(); if (event.key === 'Escape' && $('#dailyModal').classList.contains('open')) closeDailyWrapUp(); if (event.key === 'Escape' && $('#adminModal').classList.contains('open')) closeAdmin(); });
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('#parentModal').classList.contains('open')) closeParent(); if (event.key === 'Escape' && $('#rewardModal').classList.contains('open')) closeReward(); if (event.key === 'Escape' && $('#dailyModal').classList.contains('open')) closeDailyWrapUp(); if (event.key === 'Escape' && $('#adminModal').classList.contains('open')) closeAdmin(); if (event.key === 'Escape' && $('#hanziBookModal').classList.contains('open')) closeHanziBook(); if (event.key === 'Escape' && $('#achievementModal').classList.contains('open')) closeAchievements(); });
 
 $('.app-shell').classList.add('home-active'); mountHomeMap(); renderWardrobe(); renderHome(); updateProgress(); renderParentProfileControls(); if (location.hash) window.dispatchEvent(new PopStateEvent('popstate'));
