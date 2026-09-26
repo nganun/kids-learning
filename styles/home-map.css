@@ -90,3 +90,9 @@
 /* High-legibility colorful type: remove the pale highlight layer and keep the gradient compact. */
 .app-shell.home-active .theme-card.map-node .map-copy strong{background-image:linear-gradient(90deg,#d30050 0%,#9a27c4 45%,#126dcc 72%,#00815c 100%)!important;background-size:100% 100%!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;-webkit-text-stroke:.6px #160020!important;font-weight:900!important;text-shadow:0 2px 2px rgba(24,5,47,.48)!important;filter:saturate(1.45) contrast(1.25)}
 @media(max-width:600px){.app-shell.home-active .theme-card.map-node .map-copy strong{-webkit-text-stroke:.42px #160020!important;text-shadow:0 1px 2px rgba(24,5,47,.5)!important}}
+
+/* Use the app-wide magic-purple type for every cloud destination label. */
+.app-shell.home-active .theme-card.map-node .map-copy strong{background:none!important;-webkit-background-clip:initial!important;background-clip:initial!important;-webkit-text-fill-color:#5a35af!important;color:#5a35af!important;-webkit-text-stroke:0!important;font-weight:900!important;text-shadow:0 1px 0 rgba(255,255,255,.9),0 2px 2px rgba(61,35,122,.26)!important;filter:none}
+
+/* Tighter soft-focus halo on narrow screens. */
+@media(max-width:600px){.app-shell.home-active .luna-stage::before{width:118px;height:166px}}
