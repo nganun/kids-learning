@@ -358,7 +358,7 @@ function renderHome() {
   $('#speechChildName').textContent = `Hi, ${childName()}!`;
   $('.mini-speak').dataset.say = `Hi, ${childName()}! Let's make magic!`;
   $('#todayThemeName').textContent = theme.title;
-  $('#homePrimaryAction').querySelector('span').textContent = state.lessonMode === 'review' ? '继续探险复习' : '出发去探险';
+  $('#homePrimaryAction').setAttribute('aria-label', state.lessonMode === 'review' ? '继续探险复习' : '出发去探险');
   $('#todayThemeMeta').textContent = `${theme.subtitle} · 3 分钟 · ${theme.words.join(' / ')}`;
   $('#dailyMissionTitle').textContent = state.daily.claimed ? '今天的礼物已收到！' : '完成 3 个小目标';
   const tasks = [ ['round', '完成 1 个魔法小游戏'], ['theme', '完成 1 个魔法主题'], ['dress', '在衣橱换 1 件装扮'] ];

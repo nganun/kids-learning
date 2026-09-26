@@ -21,8 +21,21 @@
   <path d="M1022 286c11-24 36-26 48-1-18 4-30 15-41 31-10-11-12-20-7-30Z" fill="#7ac58b"/>
   <!-- forest, middle-left -->
   <g filter="url(#soft)"><path d="M79 420c31-50 99-52 122-9 12-44 76-55 102-12 39-21 86 16 73 61 36 8 49 56 20 84H73c-30-35-20-94 6-124Z" fill="#6cae79"/><g fill="#99d58a"><circle cx="123" cy="424" r="35"/><circle cx="188" cy="400" r="40"/><circle cx="254" cy="430" r="39"/><circle cx="321" cy="454" r="36"/></g></g>
-  <!-- central castle -->
-  <g filter="url(#soft)" stroke="#5a4d9e" stroke-linejoin="round"><path d="M472 386h255v98H472z" fill="#ada5f1" stroke-width="8"/><path d="M494 386V274l47-47 47 47v112Zm91 0V233l54-64 54 64v153Zm91 0V274l47-47 47 47v112Z" fill="#c4bcff" stroke-width="8"/><path d="m511 227 30-72 30 72zm98-58 30-76 30 76zm98 58 30-72 30 72z" fill="#f7d26e" stroke-width="8"/><path d="M604 484v-54c0-30 70-30 70 0v54Z" fill="#574593" stroke-width="8"/></g><g fill="#fff2a2"><rect x="520" y="310" width="21" height="28" rx="9"/><rect x="628" y="261" width="22" height="30" rx="10"/><rect x="697" y="310" width="21" height="28" rx="9"/></g>
+  <!-- detailed central magic castle -->
+  <g filter="url(#soft)" stroke="#4c3d91" stroke-linejoin="round">
+    <path d="M408 496h386v30H408z" fill="#6653aa" stroke-width="8"/>
+    <path d="M432 496V359h82v137Zm248 0V359h82v137Z" fill="#a69ded" stroke-width="8"/>
+    <path d="M492 496V294h216v202Z" fill="#c9c2ff" stroke-width="8"/>
+    <path d="M514 294V225l45-44 45 44v69Zm82 0V152l49-62 49 62v142Zm82 0V225l45-44 45 44v69Z" fill="#b7adfa" stroke-width="8"/>
+    <path d="m530 225 29-74 30 74zm86-73 29-78 30 78zm86 73 29-74 30 74z" fill="#f8d16a" stroke-width="8"/>
+    <path d="M538 151v-29l22 15zm94-77V42l24 16zm92 77v-29l22 15z" fill="#ef789f" stroke-width="6"/>
+    <path d="M588 496v-63c0-36 114-36 114 0v63Z" fill="#584292" stroke-width="8"/>
+    <path d="M426 359h96m156 0h96" stroke="#6d5ab4" stroke-width="8"/>
+    <path d="M513 318h174" stroke="#fff4ad" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g fill="#fff4a7" stroke="#7e6cc8" stroke-width="5"><rect x="453" y="389" width="22" height="32" rx="10"/><rect x="542" y="336" width="24" height="34" rx="11"/><rect x="633" y="202" width="25" height="35" rx="12"/><rect x="724" y="336" width="24" height="34" rx="11"/><rect x="749" y="389" width="22" height="32" rx="10"/></g>
+  <path d="m645 260 8 18 19 3-14 13 3 19-16-9-16 9 3-19-14-13 19-3z" fill="#fff6ad"/>
+  <path d="M520 497c18-20 39-30 63-30m74 0c24 0 45 10 63 30" fill="none" stroke="#f6d778" stroke-width="7" stroke-linecap="round"/>
   <!-- number tower -->
   <g filter="url(#soft)" stroke="#946229" stroke-linejoin="round"><path d="M838 431h122v78H838z" fill="#ffd77a" stroke-width="8"/><path d="M856 431V266l43-57 43 57v165Z" fill="#f7c560" stroke-width="8"/><path d="m870 266 29-75 29 75z" fill="#a38fe5" stroke-width="8"/><path d="M884 509v-47c0-20 30-20 30 0v47Z" fill="#6b54aa" stroke-width="7"/></g><circle cx="899" cy="352" r="18" fill="#fff4ba"/><text x="899" y="360" text-anchor="middle" font-family="sans-serif" font-size="22" font-weight="800" fill="#946229">3</text>
   <!-- stage, bottom-left -->
