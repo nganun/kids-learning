@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="一只小兔子">
+  <rect width="240" height="180" rx="28" fill="#f4efff"/>
+  <!-- long upright ears: the primary rabbit recognition cue -->
+  <path d="M88 89C62 48 67 17 86 17c18 1 21 36 19 69" fill="#fff" stroke="#715b7b" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M152 89c26-41 21-72 2-72-18 1-21 36-19 69" fill="#fff" stroke="#715b7b" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M87 76C75 48 78 31 86 30c9 7 10 29 8 49" fill="#f3a7c5"/>
+  <path d="M153 76c12-28 9-45 1-46-9 7-10 29-8 49" fill="#f3a7c5"/>
+  <!-- face and cheeks -->
+  <ellipse cx="120" cy="112" rx="53" ry="43" fill="#fff" stroke="#715b7b" stroke-width="5"/>
+  <ellipse cx="82" cy="126" rx="13" ry="8" fill="#f8c7dc" opacity=".8"/>
+  <ellipse cx="158" cy="126" rx="13" ry="8" fill="#f8c7dc" opacity=".8"/>
+  <!-- large eyes, tiny pink nose, and rabbit mouth -->
+  <ellipse cx="102" cy="106" rx="8" ry="11" fill="#4b3c55"/>
+  <ellipse cx="138" cy="106" rx="8" ry="11" fill="#4b3c55"/>
+  <circle cx="100" cy="102" r="3" fill="#fff"/><circle cx="136" cy="102" r="3" fill="#fff"/>
+  <path d="M114 120h12l-6 6z" fill="#ed8cab"/>
+  <path d="M120 126v8m-15 0q15 12 30 0" fill="none" stroke="#715b7b" stroke-width="4" stroke-linecap="round"/>
+  <!-- whiskers -->
+  <path d="M101 124 72 117m29 15-30 5m68-13 29-7m-29 15 30 5" fill="none" stroke="#715b7b" stroke-width="3" stroke-linecap="round"/>
+</svg>
