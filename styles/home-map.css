@@ -1,104 +1,85 @@
+:root { --map-purple:#5a35af; --map-ink:#43316f; --map-gold:#ffd75e; }
 
-:root{--map-ratio:1.6078;--map-ink:#43316f;--map-gold:#fff0ae}
-.brand-mark{width:48px;height:48px;display:block;flex:0 0 auto;object-fit:contain;background:transparent;filter:drop-shadow(0 4px 5px rgba(46,32,101,.18));transition:transform .18s ease}.brand:hover .brand-mark{transform:translateY(-2px) rotate(-2deg)}
-/* A single 1312 × 816 map canvas keeps every landmark pin aligned with the illustration. */
-.app-shell.home-active{height:100dvh;min-height:620px;overflow:hidden}.app-shell.home-active main{height:calc(100dvh - 132px);overflow:hidden}.app-shell.home-active .screen,.app-shell.home-active .screen.active{height:100%;min-height:0;overflow:hidden}.app-shell.home-active #homeScreen.active{display:block}.app-shell.home-active .garden-scene{display:block;height:100%;min-height:0;padding:0;overflow:hidden}.app-shell.home-active .garden-scene::after{display:none}.app-shell.home-active .theme-map{position:absolute;inset:0;z-index:1;display:grid;place-items:center;padding:0;background:transparent}.app-shell.home-active .theme-map-heading{display:none}.app-shell.home-active .theme-map .lesson-mode-switch{position:absolute;z-index:6;top:14px;left:50%;transform:translateX(-50%);margin:0;padding:4px;background:rgba(255,255,255,.84);box-shadow:0 5px 14px rgba(53,39,105,.15);backdrop-filter:blur(7px)}.app-shell.home-active .theme-map .lesson-mode-button{min-height:34px;padding:0 16px;font-size:12px}.app-shell.home-active .theme-cards{position:relative;width:min(100vw,calc((100dvh - 132px)*var(--map-ratio)));height:auto;aspect-ratio:1312/816;max-height:100%;margin:0;border:0;border-radius:0;background:#bce6e7 url('../assets/maps/magic-castle-adventure-map.jpeg') center/100% 100% no-repeat;box-shadow:none;overflow:hidden}.app-shell.home-active .welcome-copy{display:none}.app-shell.home-active .home-bottom{display:none}
-.theme-card.map-node{position:absolute;z-index:3;display:flex;align-items:center;gap:8px;width:172px;min-height:61px;padding:8px 11px;border:3px solid #fff;border-radius:18px;background:rgba(255,255,255,.9);box-shadow:0 5px 0 rgba(59,46,112,.2),0 10px 20px rgba(65,47,119,.17);cursor:pointer;transition:transform .18s ease,box-shadow .18s ease}.theme-card.map-node:hover,.theme-card.map-node:focus-visible{transform:translateY(-4px);box-shadow:0 8px 0 rgba(59,46,112,.2),0 14px 24px rgba(65,47,119,.2)}.theme-card.map-node.active{outline:4px solid rgba(255,208,79,.86);outline-offset:3px}.theme-card.map-node.needs-learning{filter:saturate(.35);opacity:.65}.map-icon{width:44px;height:44px;flex:0 0 auto;display:grid;place-items:center;border-radius:14px;background:#e9e3ff;color:#6045a4}.map-icon svg{width:26px;height:26px;stroke-width:2.2}.map-copy{display:flex;min-width:0}.map-copy strong{display:inline-flex;align-items:center;min-height:29px;padding:5px 9px;border-radius:10px;background:#fff;color:var(--map-ink);font-family:"Baloo 2",sans-serif;font-size:15px;line-height:1.12;box-shadow:inset 0 -2px 0 rgba(79,56,126,.13)}.map-color{left:17%;top:18%}.map-animal{right:15%;top:22%}.map-english{left:7%;top:50%}.map-number{right:6%;top:51%}.map-action{left:18%;top:78%}.map-hanzi{right:18%;top:77%}.map-node.recommended{box-shadow:0 0 0 5px rgba(255,215,91,.55),0 5px 0 rgba(59,46,112,.2),0 10px 20px rgba(65,47,119,.17)}.map-node.recommended::before{content:"";position:absolute;top:-10px;right:-9px;width:18px;height:18px;border-radius:50%;background:#ffd75e;box-shadow:0 0 0 4px #fff,0 2px 5px rgba(134,89,20,.25)}.map-node.review-due .map-copy strong::after{content:"";width:7px;height:7px;margin-left:6px;border-radius:50%;background:#e76a9e}
-/* OC outfit is a live map layer in front of the castle. */
-.app-shell.home-active .luna-stage{display:block;position:absolute;z-index:4;left:50%;top:68%;width:150px;height:226px;min-height:0;transform:translateX(-50%);pointer-events:none}.app-shell.home-active .luna-stage .cloud,.app-shell.home-active .luna-stage .castle,.app-shell.home-active .luna-stage .magic-orb,.app-shell.home-active .luna-stage .ground,.app-shell.home-active .luna-stage .speech-bubble{display:none}.app-shell.home-active .luna-stage .home-oc-avatar{display:grid;left:50%;bottom:-3px;width:150px;height:226px;transform:translateX(-50%);transform-origin:bottom center;filter:drop-shadow(0 8px 7px rgba(58,45,103,.27))}.app-shell.home-active .luna-stage .home-oc-avatar svg{width:100%;height:100%}
-.expedition-image-button{display:block;width:min(100%,340px);padding:0;border:0;background:transparent}.expedition-image-button img{display:block;width:100%;height:auto;filter:drop-shadow(0 7px 0 rgba(83,58,139,.27))}
-@media(min-width:601px){html,body{width:100%;min-width:0;background:#edf0ff}body>.app-shell,body>.app-shell.home-active{width:100%!important;max-width:none!important;margin:0!important;box-shadow:none!important}}
-@media(max-width:600px){.brand-mark{width:42px;height:42px}.app-shell.home-active .theme-cards{width:100vw;max-width:100%;height:auto;aspect-ratio:1312/816}.app-shell.home-active .theme-map .lesson-mode-switch{top:8px}.app-shell.home-active .theme-card.map-node{width:108px;min-height:47px;padding:5px 6px;border-radius:14px}.map-icon{width:31px;height:31px;border-radius:11px}.map-icon svg{width:19px;height:19px}.map-copy strong{min-height:23px;padding:3px 5px;border-radius:7px;font-size:10px}.map-color{left:16%;top:19%}.map-animal{right:12%;top:22%}.map-english{left:3%;top:50%}.map-number{right:2%;top:51%}.map-action{left:16%;top:78%}.map-hanzi{right:12%;top:77%}.app-shell.home-active .luna-stage{top:68%;width:86px;height:130px}.app-shell.home-active .luna-stage .home-oc-avatar{width:86px;height:130px}}
+/* Brand */
+.brand-mark { width:48px; height:48px; display:block; flex:0 0 auto; object-fit:contain; background:transparent; filter:drop-shadow(0 4px 5px rgba(46,32,101,.18)); transition:transform .18s ease; }
+.brand:hover .brand-mark { transform:translateY(-2px) rotate(-2deg); }
 
-/* Portrait mobile map: a separate 720 × 1456 illustration fills the available height without top/bottom letterboxing. */
-@media(max-width:600px){.app-shell.home-active .theme-map{background:#c5e9e3}.app-shell.home-active .theme-cards{width:min(100vw,calc((100dvh - 132px)*.4945));height:auto;aspect-ratio:720/1456;max-height:100%;background:#c5e9e3 url('../assets/maps/magic-castle-adventure-map-mobile.jpeg') center/100% 100% no-repeat}.app-shell.home-active .theme-card.map-node{width:108px;min-height:47px}.app-shell.home-active .map-color{left:7%;top:43%}.app-shell.home-active .map-animal{right:5%;top:34%}.app-shell.home-active .map-english{right:3%;left:auto;top:49%}.app-shell.home-active .map-action{left:4%;top:60%}.app-shell.home-active .map-hanzi{left:8%;right:auto;top:71%}.app-shell.home-active .map-number{left:50%;right:auto;top:87%;transform:translateX(-50%)}.app-shell.home-active .luna-stage{top:37%;width:122px;height:185px}.app-shell.home-active .luna-stage .home-oc-avatar{width:122px;height:185px}}
+/* Full-screen adventure map shell */
+.app-shell.home-active { height:100dvh; min-height:620px; overflow:hidden; }
+.app-shell.home-active main { height:calc(100dvh - 132px); overflow:hidden; }
+.app-shell.home-active .screen, .app-shell.home-active .screen.active { height:100%; min-height:0; overflow:hidden; }
+.app-shell.home-active #homeScreen.active { display:block; }
+.app-shell.home-active .garden-scene { display:block; height:100%; min-height:0; padding:0; overflow:hidden; }
+.app-shell.home-active .garden-scene::after, .app-shell.home-active .welcome-copy, .app-shell.home-active .home-bottom { display:none; }
+.app-shell.home-active .theme-map { position:absolute; inset:0; z-index:1; display:grid; place-items:stretch; padding:0; background:transparent; }
+.app-shell.home-active .theme-map-heading { display:none; }
+.app-shell.home-active .theme-map .lesson-mode-switch { position:absolute; z-index:6; top:14px; left:50%; transform:translateX(-50%); margin:0; padding:4px; background:rgba(255,255,255,.84); box-shadow:0 5px 14px rgba(53,39,105,.15); backdrop-filter:blur(7px); }
+.app-shell.home-active .theme-map .lesson-mode-button { min-height:34px; padding:0 16px; font-size:12px; }
+.app-shell.home-active .theme-cards { position:relative; width:100%; height:100%; margin:0; overflow:hidden; border:0; border-radius:0; background:#bce6e7 url('../assets/maps/magic-castle-adventure-map.jpeg') center/cover no-repeat; box-shadow:none; }
 
-/* Soft focus halo: gently quiet the map immediately around Luna so the live outfit reads first. */
-.app-shell.home-active .luna-stage::before{content:"";position:absolute;z-index:0;left:50%;top:50%;width:178px;height:238px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.52) 0%,rgba(255,255,255,.40) 24%,rgba(255,255,255,.24) 48%,rgba(255,255,255,.10) 70%,rgba(255,255,255,0) 100%);backdrop-filter:blur(2px) saturate(.76);pointer-events:none}.app-shell.home-active .luna-stage .home-oc-avatar{z-index:1}@media(max-width:600px){.app-shell.home-active .luna-stage::before{width:150px;height:210px;background:radial-gradient(ellipse,rgba(255,255,255,.50) 0%,rgba(255,255,255,.38) 25%,rgba(255,255,255,.22) 50%,rgba(255,255,255,.08) 72%,rgba(255,255,255,0) 100%)}}
+/* Cloud destination buttons */
+.theme-card.map-node { position:absolute; z-index:3; display:flex; align-items:center; justify-content:center; width:142px; min-height:48px; padding:6px 11px; border:0; border-radius:0; background:transparent; box-shadow:none; cursor:pointer; isolation:isolate; transition:transform .18s ease; }
+.theme-card.map-node::before { content:""; position:absolute; z-index:-1; inset:-12px -16px; background:url('../assets/ui/cloud-label.svg') center/100% 100% no-repeat; filter:drop-shadow(0 5px 6px rgba(72,51,123,.18)); }
+.theme-card.map-node:hover, .theme-card.map-node:focus-visible { transform:translateY(-4px); }
+.theme-card.map-node:hover::before, .theme-card.map-node:focus-visible::before { filter:drop-shadow(0 8px 8px rgba(72,51,123,.23)); }
+.theme-card.map-node.active { outline:4px solid rgba(255,208,79,.86); outline-offset:3px; }
+.theme-card.map-node.needs-learning { filter:saturate(.55); opacity:1; }
+.map-icon { display:none; }
+.map-copy { display:flex; justify-content:center; min-width:0; }
+.map-copy strong { display:inline-flex; align-items:center; min-height:25px; padding:0; transform:translateY(7px); color:var(--map-purple); font-family:"Baloo 2",sans-serif; font-size:16px; line-height:1.12; font-weight:900; letter-spacing:.025em; text-align:center; text-shadow:0 1px 0 rgba(255,255,255,.9),0 2px 2px rgba(61,35,122,.26); }
+.map-node.recommended .map-copy::after { content:""; position:absolute; z-index:2; top:-14px; right:-12px; width:17px; height:17px; border:4px solid #fff; border-radius:50%; background:var(--map-gold); box-shadow:0 2px 5px rgba(134,89,20,.25); }
+.map-node.review-due .map-copy strong::after { content:""; width:7px; height:7px; margin-left:6px; border-radius:50%; background:#e76a9e; }
 
-/* Cloud destination labels: map points are now text-only, with a child-readable cloud outline. */
-.theme-card.map-node{justify-content:center;gap:0;min-height:54px;padding:7px 15px;border:3px solid #fff;border-radius:999px;background:rgba(255,255,255,.94);box-shadow:0 5px 0 rgba(59,46,112,.2),0 10px 20px rgba(65,47,119,.17)}.theme-card.map-node::before,.theme-card.map-node::after{content:"";position:absolute;z-index:-1;background:inherit;border:inherit}.theme-card.map-node::before{width:38px;height:38px;left:17px;top:-15px;border-radius:50%;border-bottom:0}.theme-card.map-node::after{width:50px;height:50px;right:18px;top:-21px;border-radius:50%;border-bottom:0}.map-copy{justify-content:center}.map-copy strong{min-height:25px;padding:0;background:transparent!important;box-shadow:none!important;font-size:15px;color:var(--map-ink)}.map-icon{display:none}.map-node.recommended::before{top:-17px;left:12px;width:18px;height:18px;border:4px solid #fff;border-radius:50%;background:#ffd75e;box-shadow:0 2px 5px rgba(134,89,20,.25)}.map-node.review-due .map-copy strong::after{content:"";width:7px;height:7px;margin-left:6px;border-radius:50%;background:#e76a9e}@media(max-width:600px){.app-shell.home-active .theme-card.map-node{width:102px;min-height:42px;padding:5px 9px;border-width:2px}.theme-card.map-node::before{width:27px;height:27px;left:12px;top:-11px}.theme-card.map-node::after{width:34px;height:34px;right:13px;top:-15px}.map-copy strong{min-height:20px;font-size:10px}.map-node.recommended::before{width:14px;height:14px;left:9px;top:-12px;border-width:3px}}
+/* Desktop destination coordinates */
+.map-color { left:17%; top:18%; }
+.map-animal { right:15%; top:22%; }
+.map-english { left:7%; top:50%; }
+.map-number { right:6%; top:51%; }
+.map-action { left:18%; top:78%; }
+.map-hanzi { right:18%; top:77%; }
+.daily-route { position:absolute; z-index:7; left:50%; bottom:14px; transform:translateX(-50%); min-height:38px; padding:0 15px; border:3px solid #fff; border-radius:999px; background:rgba(255,248,195,.93); color:#684792; box-shadow:0 4px 0 rgba(102,70,146,.2); font-weight:900; white-space:nowrap; }
 
-/* Compact cloud labels leave more of the map artwork visible. */
-.theme-card.map-node{width:142px;min-height:48px;padding:6px 11px}.theme-card.map-node::before{width:31px;height:31px;left:14px;top:-13px}.theme-card.map-node::after{width:40px;height:40px;right:15px;top:-18px}.map-copy strong{font-size:13px}@media(max-width:600px){.app-shell.home-active .theme-card.map-node{width:88px;min-height:37px;padding:4px 7px}.theme-card.map-node::before{width:22px;height:22px;left:10px;top:-9px}.theme-card.map-node::after{width:28px;height:28px;right:11px;top:-12px}.map-copy strong{font-size:9px}}
+/* Live OC guide layer */
+.app-shell.home-active .luna-stage { display:block; position:absolute; z-index:4; left:50%; top:68%; width:150px; height:226px; min-height:0; transform:translateX(-50%); pointer-events:none; }
+.app-shell.home-active .luna-stage::before { content:""; position:absolute; z-index:0; left:50%; top:50%; width:178px; height:238px; transform:translate(-50%,-50%); border-radius:50%; background:radial-gradient(ellipse,rgba(255,255,255,.52) 0%,rgba(255,255,255,.40) 24%,rgba(255,255,255,.24) 48%,rgba(255,255,255,.10) 70%,transparent 100%); backdrop-filter:blur(2px) saturate(.76); }
+.app-shell.home-active .luna-stage .cloud, .app-shell.home-active .luna-stage .castle, .app-shell.home-active .luna-stage .magic-orb, .app-shell.home-active .luna-stage .ground, .app-shell.home-active .luna-stage .speech-bubble { display:none; }
+.app-shell.home-active .luna-stage .home-oc-avatar { display:grid; z-index:1; left:50%; bottom:-3px; width:150px; height:226px; transform:translateX(-50%); transform-origin:bottom center; filter:drop-shadow(0 8px 7px rgba(58,45,103,.27)); }
+.app-shell.home-active .luna-stage .home-oc-avatar svg { width:100%; height:100%; }
 
-/* Translucent cloud glass with a soft rainbow wordmark. */
-.theme-card.map-node{background:linear-gradient(135deg,rgba(255,255,255,.86),rgba(244,239,255,.66))!important;border-color:rgba(255,255,255,.92);backdrop-filter:blur(5px) saturate(1.08)}.theme-card.map-node::before,.theme-card.map-node::after{background:inherit!important;border-color:rgba(255,255,255,.92)}.map-copy strong{background:linear-gradient(90deg,#e968a4 0%,#8b61cf 46%,#3f9f9c 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;text-shadow:0 1px 0 rgba(255,255,255,.45)}.theme-card.map-node:hover .map-copy strong,.theme-card.map-node:focus-visible .map-copy strong{background:linear-gradient(90deg,#f04e93 0%,#7052c8 48%,#269c91 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important}
+/* Other home controls */
+.expedition-image-button { display:block; width:min(100%,340px); padding:0; border:0; background:transparent; }
+.expedition-image-button img { display:block; width:100%; height:auto; filter:drop-shadow(0 7px 0 rgba(83,58,139,.27)); }
 
-/* One continuous SVG cloud avoids the artificial two-circles-and-rectangle treatment. */
-.theme-card.map-node{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;backdrop-filter:none!important;isolation:isolate}.theme-card.map-node::before{content:""!important;position:absolute!important;z-index:-1!important;inset:-12px -16px!important;width:auto!important;height:auto!important;border:0!important;border-radius:0!important;background:url('../assets/ui/cloud-label.svg') center/100% 100% no-repeat!important;filter:drop-shadow(0 5px 6px rgba(72,51,123,.18))}.theme-card.map-node::after{display:none!important}.theme-card.map-node:hover,.theme-card.map-node:focus-visible{box-shadow:none!important;transform:translateY(-4px)}.theme-card.map-node:hover::before,.theme-card.map-node:focus-visible::before{filter:drop-shadow(0 8px 8px rgba(72,51,123,.23))}.map-node.recommended::before{background:url('../assets/ui/cloud-label.svg') center/100% 100% no-repeat!important;box-shadow:none!important}.map-node.recommended .map-copy::after{content:"";position:absolute;z-index:2;top:-14px;right:-12px;width:17px;height:17px;border:4px solid #fff;border-radius:50%;background:#ffd75e;box-shadow:0 2px 5px rgba(134,89,20,.25)}.map-copy strong{padding:0!important;text-align:center}.map-node.review-due .map-copy strong::after{content:"";width:7px;height:7px;margin-left:6px;border-radius:50%;background:#e76a9e}@media(max-width:600px){.theme-card.map-node::before{inset:-9px -11px!important}.map-node.recommended .map-copy::after{top:-11px;right:-9px;width:12px;height:12px;border-width:3px}}
+@media (min-width:601px) {
+  html, body { width:100%; min-width:0; background:#edf0ff; }
+  body > .app-shell, body > .app-shell.home-active { width:100%!important; max-width:none!important; margin:0!important; box-shadow:none!important; }
+}
 
-/* Stronger cloud-label typography for quick child recognition. */
-.map-copy strong{font-weight:900!important;letter-spacing:.025em;text-shadow:0 1px 0 rgba(255,255,255,.62),0 0 1px rgba(74,49,118,.16)}
+@media (max-width:600px) {
+  .brand-mark { width:42px; height:42px; }
+  .app-shell.home-active .theme-map .lesson-mode-switch { top:8px; }
+  .app-shell.home-active .theme-cards { background-image:url('../assets/maps/magic-castle-adventure-map-mobile.jpeg'); background-position:center center; }
+  .theme-card.map-node { width:88px; min-height:37px; padding:4px 7px; }
+  .theme-card.map-node::before { inset:-9px -11px; }
+  .map-copy strong { min-height:20px; transform:translateY(5px); font-size:11px; }
+  .map-node.recommended .map-copy::after { top:-11px; right:-9px; width:12px; height:12px; border-width:3px; }
+  .map-color { left:7%; top:42%; }
+  .map-animal { right:5%; top:33%; }
+  .map-english { right:3%; left:auto; top:49%; }
+  .map-number { left:50%; right:auto; top:87%; transform:translateX(-50%); }
+  .map-action { left:4%; top:60%; }
+  .map-hanzi { left:8%; right:auto; top:71%; }
+  .daily-route { bottom:8px; min-height:31px; padding:0 10px; border-width:2px; font-size:10px; }
+  .app-shell.home-active .luna-stage { top:36%; width:122px; height:185px; }
+  .app-shell.home-active .luna-stage::before { width:118px; height:166px; }
+  .app-shell.home-active .luna-stage .home-oc-avatar { width:122px; height:185px; }
+}
 
-/* Center the wordmark in the cloud's lower visual mass and give its gradient a crisp outline. */
-.map-copy strong{transform:translateY(4px);-webkit-text-stroke:.65px rgba(80,52,126,.62);paint-order:stroke fill;text-shadow:0 1px 0 rgba(255,255,255,.72),0 0 1px rgba(74,49,118,.22)}
-@media(max-width:600px){.map-copy strong{transform:translateY(3px);-webkit-text-stroke:.5px rgba(80,52,126,.62)}}
+@media (max-width:600px) and (max-aspect-ratio:9/19) {
+  .app-shell.home-active .theme-cards { background-position:center 43%; }
+  .app-shell.home-active .luna-stage { top:34%; }
+}
 
-/* Lower the Chinese destination names a little further within their cloud labels. */
-.map-copy strong{transform:translateY(7px)}
-@media(max-width:600px){.map-copy strong{transform:translateY(5px)}}
-
-/* Larger, high-contrast Chinese cloud labels. */
-.map-copy strong{font-size:16px;-webkit-text-stroke:1px rgba(25,18,43,.88);text-shadow:0 1px 0 rgba(255,255,255,.8),0 1px 2px rgba(25,18,43,.24)}
-@media(max-width:600px){.map-copy strong{font-size:11px;-webkit-text-stroke:.75px rgba(25,18,43,.88)}}
-
-/* Final high-legibility treatment for destination names. */
-.map-copy strong{transform:translateY(10px);background:linear-gradient(90deg,#d71468 0%,#6c25bb 48%,#007f8a 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;-webkit-text-stroke:1.35px #1b1230;font-weight:900!important;text-shadow:0 1px 0 rgba(255,255,255,.95),0 2px 2px rgba(20,12,40,.35)}
-@media(max-width:600px){.map-copy strong{transform:translateY(7px);-webkit-text-stroke:1px #1b1230;text-shadow:0 1px 0 rgba(255,255,255,.95),0 1px 2px rgba(20,12,40,.36)}}
-
-/* More vivid candy-gradient lettering for the cloud destinations. */
-.map-copy strong{background:linear-gradient(90deg,#ff2f78 0%,#b72cff 38%,#5b55ff 63%,#00b7a8 100%)!important;background-size:180% 100%!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;-webkit-text-stroke:1.35px #21123d;text-shadow:0 1px 0 #fff,0 2px 3px rgba(27,12,54,.42)}
-
-/* Bright rainbow destination type with a true black outline. */
-.map-copy strong{background:linear-gradient(90deg,#ff174d 0%,#ff7a00 22%,#8f2dff 48%,#1677ff 72%,#00a878 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;-webkit-text-stroke:1.35px #000!important;paint-order:stroke fill;text-shadow:0 1px 0 rgba(255,255,255,.95),0 2px 3px rgba(0,0,0,.32)}
-@media(max-width:600px){.map-copy strong{-webkit-text-stroke:1px #000!important}}
-
-/* Keep the rainbow fill visible: the previous heavy outline covered most of the small glyph interiors. */
-.map-copy strong{background:linear-gradient(90deg,#ff174d 0%,#ff7a00 24%,#8f2dff 49%,#1677ff 73%,#00a878 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;-webkit-text-stroke:.55px #000!important;paint-order:stroke fill;text-shadow:0 1px 0 rgba(255,255,255,.92),0 1px 2px rgba(0,0,0,.28)}
-@media(max-width:600px){.map-copy strong{-webkit-text-stroke:.35px #000!important}}
-
-/* Deeper jewel-tone gradient for destination names. */
-.map-copy strong{background:linear-gradient(90deg,#a5003d 0%,#b64500 22%,#55149a 48%,#123f9c 74%,#00684f 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important}
-
-/* Mobile portrait map fills the available viewport: its 720×1456 ratio is close enough to phone screens that cover only trims a small amount from top/bottom, never leaves side bars. */
-@media(max-width:600px){.app-shell.home-active .theme-map{place-items:stretch}.app-shell.home-active .theme-cards{width:100%;max-width:none;height:100%;max-height:none;aspect-ratio:auto;background-size:cover;background-position:center center}.app-shell.home-active .map-color{left:7%;top:42%}.app-shell.home-active .map-animal{right:5%;top:33%}.app-shell.home-active .map-english{right:3%;left:auto;top:49%}.app-shell.home-active .map-action{left:4%;top:60%}.app-shell.home-active .map-hanzi{left:8%;right:auto;top:71%}.app-shell.home-active .map-number{left:50%;right:auto;top:87%;transform:translateX(-50%)}.app-shell.home-active .luna-stage{top:36%}}
-
-/* Aspect-ratio-aware artwork selection: portrait phones use the tall map, while landscape phones switch to the wide map. */
-@media(max-width:600px) and (orientation:portrait){.app-shell.home-active .theme-cards{background-image:url('../assets/maps/magic-castle-adventure-map-mobile.jpeg')}.app-shell.home-active .theme-cards{background-position:center center}}
-@media(max-width:600px) and (max-aspect-ratio:9/19){.app-shell.home-active .theme-cards{background-position:center 43%}.app-shell.home-active .luna-stage{top:34%}}
-@media(min-width:601px) and (max-width:900px) and (orientation:landscape){.app-shell.home-active .theme-cards{background-image:url('../assets/maps/magic-castle-adventure-map.jpeg');background-size:cover;background-position:center}.app-shell.home-active .map-color{left:17%;top:18%}.app-shell.home-active .map-animal{right:15%;top:22%}.app-shell.home-active .map-english{left:7%;top:50%}.app-shell.home-active .map-number{right:6%;top:51%}.app-shell.home-active .map-action{left:18%;top:78%}.app-shell.home-active .map-hanzi{right:18%;top:77%}}
-
-/* Clear black destination names, per the map-label direction. */
-.map-copy strong{background:none!important;-webkit-background-clip:initial!important;background-clip:initial!important;-webkit-text-fill-color:#000!important;color:#000!important;-webkit-text-stroke:0!important;text-shadow:0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.24)}
-
-/* Deep jewel-tone gradient for cloud destination names. */
-.map-copy strong{background:linear-gradient(90deg,#7f0030 0%,#8d3d00 23%,#401080 48%,#082f7b 73%,#00563f 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;-webkit-text-stroke:.35px rgba(0,0,0,.6)!important;text-shadow:0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.25)}
-@media(max-width:600px){.map-copy strong{-webkit-text-stroke:.25px rgba(0,0,0,.6)!important}}
-
-/* Single final label treatment: high-contrast dark gradient without white washout. */
-.app-shell.home-active .theme-card.map-node .map-copy strong{background-image:linear-gradient(90deg,#52001f 0%,#672900 24%,#310064 49%,#001f65 74%,#003d2c 100%)!important;background-color:transparent!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;-webkit-text-stroke:.45px #12001f!important;text-shadow:0 1px 1px rgba(0,0,0,.35)!important;filter:saturate(1.45) contrast(1.25);opacity:1}.app-shell.home-active .theme-card.map-node.needs-learning{opacity:1;filter:saturate(.55)}@media(max-width:600px){.app-shell.home-active .theme-card.map-node .map-copy strong{-webkit-text-stroke:.35px #12001f!important;text-shadow:0 1px 1px rgba(0,0,0,.35)!important}}
-
-/* Final colorful cloud-label lettering. */
-.app-shell.home-active .theme-card.map-node .map-copy strong{background-image:linear-gradient(90deg,#f01863 0%,#ff8a00 24%,#9137ff 49%,#1677ff 74%,#00a96e 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;-webkit-text-stroke:.4px #211038!important;filter:saturate(1.35) contrast(1.12)}
-@media(max-width:600px){.app-shell.home-active .theme-card.map-node .map-copy strong{-webkit-text-stroke:.3px #211038!important}}
-
-/* Softer, slower color transition with a lifted shadow for the cloud labels. */
-.app-shell.home-active .theme-card.map-node .map-copy strong{background-image:linear-gradient(90deg,#ec4f86 0%,#df659d 24%,#9c64d7 50%,#558cda 75%,#42ad90 100%)!important;background-size:220% 100%!important;-webkit-text-stroke:.35px #271342!important;text-shadow:0 1px 0 rgba(255,255,255,.8),0 3px 4px rgba(43,24,79,.38),0 0 5px rgba(255,255,255,.25)!important}
-@media(max-width:600px){.app-shell.home-active .theme-card.map-node .map-copy strong{-webkit-text-stroke:.25px #271342!important;text-shadow:0 1px 0 rgba(255,255,255,.8),0 2px 3px rgba(43,24,79,.36)!important}}
-
-/* High-legibility colorful type: remove the pale highlight layer and keep the gradient compact. */
-.app-shell.home-active .theme-card.map-node .map-copy strong{background-image:linear-gradient(90deg,#d30050 0%,#9a27c4 45%,#126dcc 72%,#00815c 100%)!important;background-size:100% 100%!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;-webkit-text-stroke:.6px #160020!important;font-weight:900!important;text-shadow:0 2px 2px rgba(24,5,47,.48)!important;filter:saturate(1.45) contrast(1.25)}
-@media(max-width:600px){.app-shell.home-active .theme-card.map-node .map-copy strong{-webkit-text-stroke:.42px #160020!important;text-shadow:0 1px 2px rgba(24,5,47,.5)!important}}
-
-/* Use the app-wide magic-purple type for every cloud destination label. */
-.app-shell.home-active .theme-card.map-node .map-copy strong{background:none!important;-webkit-background-clip:initial!important;background-clip:initial!important;-webkit-text-fill-color:#5a35af!important;color:#5a35af!important;-webkit-text-stroke:0!important;font-weight:900!important;text-shadow:0 1px 0 rgba(255,255,255,.9),0 2px 2px rgba(61,35,122,.26)!important;filter:none}
-
-/* Tighter soft-focus halo on narrow screens. */
-@media(max-width:600px){.app-shell.home-active .luna-stage::before{width:118px;height:166px}}
-
-/* Daily route gives a child one clear next adventure without hiding free map choice. */
-.daily-route{position:absolute;z-index:7;left:50%;bottom:14px;transform:translateX(-50%);min-height:38px;padding:0 15px;border:3px solid #fff;border-radius:999px;background:rgba(255,248,195,.93);color:#684792;font-weight:900;box-shadow:0 4px 0 rgba(102,70,146,.2);white-space:nowrap}@media(max-width:600px){.daily-route{bottom:8px;min-height:31px;padding:0 10px;font-size:10px;border-width:2px}}
-
-/* Desktop full-bleed map: adapt the artwork to the browser viewport instead of preserving side letterbox bars. */
-@media(min-width:601px){.app-shell.home-active .theme-map{place-items:stretch}.app-shell.home-active .theme-cards{width:100%;max-width:none;height:100%;max-height:none;aspect-ratio:auto;background-size:cover;background-position:center center}}
+@media (min-width:601px) and (max-width:900px) and (orientation:landscape) {
+  .app-shell.home-active .theme-cards { background-image:url('../assets/maps/magic-castle-adventure-map.jpeg'); background-position:center; }
+}

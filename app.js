@@ -2,15 +2,14 @@ import { getPartOptions, renderCharacterSVG } from './assets/oc-english/characte
 import { wardrobeThumb } from './assets/oc-english/wardrobe.js';
 import { OC_WARDROBE } from './assets/oc-english/wardrobe-data.js';
 import { ACHIEVEMENT_DEFINITIONS, unlockAchievementIds } from './features/achievements.js';
+import { createStorage } from './features/storage.js';
+import { themeNeedsReview as isThemeReviewDue, recommendedThemeId as getRecommendedThemeId, dailyRouteThemeIds } from './features/map-route.js';
 
 const CHILD_NAME = '荆宝';
 let deferredInstallPrompt = null;
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-const storageGet = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
-const save = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { showToast?.('这台设备暂时无法保存学习记录。'); return false; } };
-const saveText = (key, value) => { try { localStorage.setItem(key, value); return true; } catch { showToast?.('这台设备暂时无法保存学习记录。'); return false; } };
-const load = (key, fallback) => { try { return JSON.parse(storageGet(key)) ?? fallback; } catch { return fallback; } };
+const { getText: storageGet, load, save, saveText } = createStorage(() => showToast?.('这台设备暂时无法保存学习记录。'));
 
 let THEMES = {
   color: { id: 'color', title: 'Color Magic', subtitle: '颜色魔法', words: ['red', 'yellow', 'blue'], rewards: ['hat_crown', 'top_dress', 'bottom_tutu', 'shoes_glass', 'back_wings'],
@@ -386,19 +385,9 @@ function mountHomeMap() {
   const scene = $('.garden-scene'); const map = $('.theme-map');
   if (scene && map && map.parentElement !== scene) scene.append(map);
 }
-function themeNeedsReview(theme) {
-  return theme.words.some((word) => { const progress = state.wordProgress[`${theme.id}:${word}`]; return progress?.mastered && progress.dueDate <= todayKey; });
-}
-function recommendedThemeId() {
-  const due = Object.values(THEMES).find(themeNeedsReview);
-  if (due) return due.id;
-  return Object.values(THEMES).find((theme) => !state.completedThemes.includes(theme.id))?.id || state.activeTheme;
-}
-function dailyRouteThemes() {
-  const due = Object.values(THEMES).filter(themeNeedsReview).slice(0, 2).map((theme) => theme.id);
-  const fresh = Object.values(THEMES).find((theme) => !state.completedThemes.includes(theme.id));
-  return Array.from(new Set([...due, fresh?.id].filter(Boolean))).slice(0, 3);
-}
+function themeNeedsReview(theme) { return isThemeReviewDue(theme, state.wordProgress, todayKey); }
+function recommendedThemeId() { return getRecommendedThemeId(THEMES, state.completedThemes, state.wordProgress, todayKey, state.activeTheme); }
+function dailyRouteThemes() { return dailyRouteThemeIds(THEMES, state.completedThemes, state.wordProgress, todayKey); }
 function renderHome() {
   const theme = currentTheme();
   $('#childNameGreeting').textContent = childName();
