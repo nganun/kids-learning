@@ -1,4 +1,4 @@
-const CACHE_NAME = 'luna-magic-english-v3';
+const CACHE_NAME = 'luna-magic-academy-v5';
 const APP_SHELL = [
   './',
   './index.html',

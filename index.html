@@ -7,12 +7,12 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="露娜英语" />
-    <meta name="description" content="露娜的魔法英语：适合幼儿的英语启蒙小游戏。" />
+    <meta name="apple-mobile-web-app-title" content="露娜学园" />
+    <meta name="description" content="露娜的魔法学园：适合幼儿的多学科启蒙小游戏。" />
     <link rel="icon" href="assets/icons/app-icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="assets/icons/app-icon-192.png" />
     <link rel="manifest" href="manifest.webmanifest" />
-    <title>露娜的魔法英语</title>
+    <title>露娜的魔法学园</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
@@ -24,7 +24,7 @@
       <header class="topbar">
         <button class="brand" type="button" data-screen="home" aria-label="回到魔法花园首页">
           <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-          <span>露娜的魔法英语</span>
+          <span>露娜的魔法学园</span>
         </button>
         <div class="top-actions">
           <div class="gem-count" aria-label="拥有 18 颗魔法星"><span class="star-token" aria-hidden="true"></span><b id="starTotal">18</b></div>
@@ -41,10 +41,10 @@
             <span class="star-speck speck-one" aria-hidden="true"></span><span class="star-speck speck-two" aria-hidden="true"></span><span class="star-speck speck-three" aria-hidden="true"></span>
             <div class="welcome-copy">
               <p class="greeting">下午好，<span id="childNameGreeting">荆宝</span></p>
-              <h1 id="homeTitle"><span id="homeChildName">荆宝</span>，今天<br />让英文变成魔法。</h1>
-              <p class="helper-text">完成一个小挑战，为露娜的衣橱添一件新礼物吧。</p>
+              <h1 id="homeTitle"><span id="homeChildName">荆宝</span>，今天<br />一起点亮新的<br />魔法知识。</h1>
+              <p class="helper-text">每天认识一点新知识，收集露娜的新装扮。</p>
               <button class="primary-button start-button child-primary-action" id="homePrimaryAction" type="button">
-                <span>开始学习单词</span>
+                <span>开始今天的学习</span>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
               </button>
             </div>
@@ -93,7 +93,7 @@
 
         <section class="screen" id="closetScreen" aria-labelledby="closetTitle">
           <div class="closet-layout oc-closet-layout">
-            <div class="closet-header"><div><p class="section-kicker">露娜的衣帽间</p><h1 id="closetTitle">闪闪衣橱</h1><p>完成英文魔法，收集新的 OC-English 装扮。</p></div><button class="back-button purple-back" type="button" data-screen="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>花园</button></div>
+            <div class="closet-header"><div><p class="section-kicker">露娜的衣帽间</p><h1 id="closetTitle">闪闪衣橱</h1><p>完成学习魔法，收集新的 OC-English 装扮。</p></div><button class="back-button purple-back" type="button" data-screen="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>花园</button></div>
             <div class="oc-closet-content">
               <section class="oc-avatar-stage" aria-label="OC-English 角色试穿预览">
                 <span class="oc-stage-label">我的 OC</span>
@@ -136,19 +136,20 @@
           <div class="profile-controls"><label for="profileSelect">正在使用</label><select id="profileSelect" aria-label="选择孩子档案"></select><div class="profile-create"><input id="newProfileName" maxlength="12" placeholder="新孩子昵称" aria-label="新孩子昵称" /><button class="secondary-button" id="createProfile" type="button">添加档案</button></div></div>
           <div class="parent-stats"><div><b id="parentStars">0</b><span>获得星星</span></div><div><b id="parentWords">0</b><span>认识单词</span></div><div><b id="parentStreak">0</b><span>连续学习</span></div><div><b>3 分钟</b><span>建议时长</span></div></div>
           <p class="parent-note">这里没有广告、外链或陌生人互动。学习记录只保存在这台设备中；录音不会上传或长期保存。</p>
-          <div class="voice-preview"><span>英文声音会优先使用设备中较自然的英语语音。儿童感朗读会更慢、语调更明亮；它不是录制的真实儿童声音。</span><div class="voice-preview-actions"><button class="secondary-button" id="voiceTest" type="button">试听英文声音</button><button class="secondary-button" id="childVoiceToggle" type="button" aria-pressed="true"></button><button class="secondary-button" id="recordingToggle" type="button" aria-pressed="false"></button></div></div>
-          <div class="parent-action-grid"><button class="secondary-button" id="installApp" type="button">安装到手机桌面</button><button class="secondary-button" id="exportProgress" type="button">导出学习记录</button><button class="secondary-button" id="importProgress" type="button">导入学习记录</button><button class="secondary-button" id="resetProgress" type="button">重新开始今天的挑战</button></div>
+          <div class="voice-preview"><span>学习朗读会优先使用设备中较自然的可用语音。英文内容会使用英语语音；儿童感朗读会更慢、语调更明亮；它不是录制的真实儿童声音。</span><div class="voice-preview-actions"><button class="secondary-button" id="voiceTest" type="button">试听学习朗读</button><button class="secondary-button" id="childVoiceToggle" type="button" aria-pressed="true"></button><button class="secondary-button" id="recordingToggle" type="button" aria-pressed="false"></button></div></div>
+          <div class="parent-action-grid"><button class="secondary-button" id="installApp" type="button">安装到手机桌面</button><button class="secondary-button" id="exportProgress" type="button">导出学习记录</button><button class="secondary-button" id="importProgress" type="button">导入学习记录</button><button class="secondary-button" id="adminButton" type="button">管理员设置</button><button class="secondary-button" id="resetProgress" type="button">重新开始今天的挑战</button></div>
           <input id="importProgressFile" type="file" accept="application/json" hidden />
         </section>
       </div>
     </div>
+    <div class="modal" id="adminModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="adminTitle"><div class="modal-card parent-modal-card"><button class="modal-close icon-button" id="closeAdmin" type="button" aria-label="关闭管理员设置">×</button><section id="adminGate"><p class="section-kicker">管理员入口</p><h2 id="adminTitle">内容管理</h2><form id="adminGateForm" class="parent-gate-form"><label for="adminPin">请输入管理员 PIN</label><input id="adminPin" type="password" inputmode="numeric" autocomplete="off" required /><button class="primary-button" type="submit">进入设置</button></form><p id="adminError" class="parent-gate-error" hidden>PIN 不正确。</p></section><section id="adminContent" hidden><p class="section-kicker">管理员设置</p><h2>学习内容</h2><p class="parent-note">英文单词使用英文逗号、中文逗号或换行分隔；汉字会逐个识别。默认 PIN 是 2468，请首次进入后修改。</p><label class="admin-field">英文学习内容<textarea id="adminEnglish" rows="4"></textarea></label><label class="admin-field">汉字学习内容<textarea id="adminHanzi" rows="4"></textarea></label><label class="admin-field">新的管理员 PIN<input id="adminNewPin" type="password" inputmode="numeric" maxlength="12" placeholder="至少 4 位数字" /></label><button id="saveAdminContent" class="primary-button" type="button">保存学习内容</button></section></div></div>
     <div class="modal daily-modal" id="dailyModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="dailyTitle">
       <div class="reward-card daily-wrap-card"><p class="section-kicker">今天完成啦</p><h2 id="dailyTitle">魔法任务全完成！</h2><p id="dailyWrapCopy">明天也来和露娜一起学英文吧。</p><div class="daily-streak-badge">连续学习 <b id="dailyWrapStreak">1</b> 天</div><div class="daily-wrap-actions"><button class="secondary-button" id="dailyWrapHome" type="button">回到花园</button><button class="primary-button" id="dailyWrapCloset" type="button">去衣橱看看</button></div></div>
     </div>
     <div class="modal reward-modal" id="rewardModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="rewardTitle">
       <div class="reward-card">
         <div class="reward-spark reward-spark-a" aria-hidden="true">✦</div><div class="reward-spark reward-spark-b" aria-hidden="true">✦</div><div class="reward-spark reward-spark-c" aria-hidden="true">✦</div>
-        <p class="section-kicker">魔法礼盒</p><h2 id="rewardTitle">叮咚！新礼物到啦</h2><p>你用勇气和英文魔法点亮了礼盒。</p>
+        <p class="section-kicker">魔法礼盒</p><h2 id="rewardTitle">叮咚！新礼物到啦</h2><p>你用勇气和学习魔法点亮了礼盒。</p>
         <div class="reward-chest" id="rewardChest"><i class="chest-lid"></i><i class="chest-base"><b>✦</b></i></div>
         <div class="reward-items"><article><span class="oc-reward-thumb" id="ocRewardDress"></span><b id="ocRewardName1">蓬蓬连衣裙</b></article><article><span class="oc-reward-thumb" id="ocRewardWings"></span><b id="ocRewardName2">天使翅膀</b></article></div>
         <button class="primary-button" type="button" id="claimReward">放进我的衣橱 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>

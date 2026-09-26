@@ -1,4 +1,4 @@
-name: Deploy child English game to GitHub Pages
+name: Deploy Luna Magic Academy to GitHub Pages
 
 on:
   push:
