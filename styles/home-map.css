@@ -83,3 +83,6 @@
 @media (min-width:601px) and (max-width:900px) and (orientation:landscape) {
   .app-shell.home-active .theme-cards { background-image:url('../assets/maps/magic-castle-adventure-map.jpeg'); background-position:center; }
 }
+
+/* The cloud above the central castle is a direct doorway to Luna's wardrobe. */
+.app-shell.home-active .magic-house-cloud{position:absolute;z-index:8;left:50%;top:24%;display:grid;place-items:center;gap:1px;width:142px;min-height:58px;padding:11px 12px 8px;transform:translateX(-50%);border:0;background:url('../assets/ui/cloud-label.svg') center/100% 100% no-repeat;color:#5a35af;filter:drop-shadow(0 5px 6px rgba(72,51,123,.2));transition:transform .18s ease,filter .18s ease}.app-shell.home-active .magic-house-cloud:hover,.app-shell.home-active .magic-house-cloud:focus-visible{transform:translateX(-50%) translateY(-4px);filter:drop-shadow(0 8px 8px rgba(72,51,123,.28))}.magic-house-cloud span{display:block;transform:translateY(7px);font-family:"Baloo 2",sans-serif;font-size:19px;font-weight:900;line-height:1;text-shadow:0 1px 0 rgba(255,255,255,.95)}.magic-house-cloud small{color:#9074ae;font-size:9px;font-weight:900}@media(max-width:600px){.app-shell.home-active .magic-house-cloud{top:25%;width:106px;min-height:44px;padding:7px 8px 5px}.magic-house-cloud span{font-size:14px}.magic-house-cloud small{font-size:7px}}
