@@ -53,3 +53,40 @@
 /* Bright rainbow destination type with a true black outline. */
 .map-copy strong{background:linear-gradient(90deg,#ff174d 0%,#ff7a00 22%,#8f2dff 48%,#1677ff 72%,#00a878 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;-webkit-text-stroke:1.35px #000!important;paint-order:stroke fill;text-shadow:0 1px 0 rgba(255,255,255,.95),0 2px 3px rgba(0,0,0,.32)}
 @media(max-width:600px){.map-copy strong{-webkit-text-stroke:1px #000!important}}
+
+/* Keep the rainbow fill visible: the previous heavy outline covered most of the small glyph interiors. */
+.map-copy strong{background:linear-gradient(90deg,#ff174d 0%,#ff7a00 24%,#8f2dff 49%,#1677ff 73%,#00a878 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;-webkit-text-stroke:.55px #000!important;paint-order:stroke fill;text-shadow:0 1px 0 rgba(255,255,255,.92),0 1px 2px rgba(0,0,0,.28)}
+@media(max-width:600px){.map-copy strong{-webkit-text-stroke:.35px #000!important}}
+
+/* Deeper jewel-tone gradient for destination names. */
+.map-copy strong{background:linear-gradient(90deg,#a5003d 0%,#b64500 22%,#55149a 48%,#123f9c 74%,#00684f 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important}
+
+/* Mobile portrait map fills the available viewport: its 720×1456 ratio is close enough to phone screens that cover only trims a small amount from top/bottom, never leaves side bars. */
+@media(max-width:600px){.app-shell.home-active .theme-map{place-items:stretch}.app-shell.home-active .theme-cards{width:100%;max-width:none;height:100%;max-height:none;aspect-ratio:auto;background-size:cover;background-position:center center}.app-shell.home-active .map-color{left:7%;top:42%}.app-shell.home-active .map-animal{right:5%;top:33%}.app-shell.home-active .map-english{right:3%;left:auto;top:49%}.app-shell.home-active .map-action{left:4%;top:60%}.app-shell.home-active .map-hanzi{left:8%;right:auto;top:71%}.app-shell.home-active .map-number{left:50%;right:auto;top:87%;transform:translateX(-50%)}.app-shell.home-active .luna-stage{top:36%}}
+
+/* Aspect-ratio-aware artwork selection: portrait phones use the tall map, while landscape phones switch to the wide map. */
+@media(max-width:600px) and (orientation:portrait){.app-shell.home-active .theme-cards{background-image:url('../assets/maps/magic-castle-adventure-map-mobile.jpeg')}.app-shell.home-active .theme-cards{background-position:center center}}
+@media(max-width:600px) and (max-aspect-ratio:9/19){.app-shell.home-active .theme-cards{background-position:center 43%}.app-shell.home-active .luna-stage{top:34%}}
+@media(min-width:601px) and (max-width:900px) and (orientation:landscape){.app-shell.home-active .theme-cards{background-image:url('../assets/maps/magic-castle-adventure-map.jpeg');background-size:cover;background-position:center}.app-shell.home-active .map-color{left:17%;top:18%}.app-shell.home-active .map-animal{right:15%;top:22%}.app-shell.home-active .map-english{left:7%;top:50%}.app-shell.home-active .map-number{right:6%;top:51%}.app-shell.home-active .map-action{left:18%;top:78%}.app-shell.home-active .map-hanzi{right:18%;top:77%}}
+
+/* Clear black destination names, per the map-label direction. */
+.map-copy strong{background:none!important;-webkit-background-clip:initial!important;background-clip:initial!important;-webkit-text-fill-color:#000!important;color:#000!important;-webkit-text-stroke:0!important;text-shadow:0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.24)}
+
+/* Deep jewel-tone gradient for cloud destination names. */
+.map-copy strong{background:linear-gradient(90deg,#7f0030 0%,#8d3d00 23%,#401080 48%,#082f7b 73%,#00563f 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;-webkit-text-stroke:.35px rgba(0,0,0,.6)!important;text-shadow:0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.25)}
+@media(max-width:600px){.map-copy strong{-webkit-text-stroke:.25px rgba(0,0,0,.6)!important}}
+
+/* Single final label treatment: high-contrast dark gradient without white washout. */
+.app-shell.home-active .theme-card.map-node .map-copy strong{background-image:linear-gradient(90deg,#52001f 0%,#672900 24%,#310064 49%,#001f65 74%,#003d2c 100%)!important;background-color:transparent!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;-webkit-text-stroke:.45px #12001f!important;text-shadow:0 1px 1px rgba(0,0,0,.35)!important;filter:saturate(1.45) contrast(1.25);opacity:1}.app-shell.home-active .theme-card.map-node.needs-learning{opacity:1;filter:saturate(.55)}@media(max-width:600px){.app-shell.home-active .theme-card.map-node .map-copy strong{-webkit-text-stroke:.35px #12001f!important;text-shadow:0 1px 1px rgba(0,0,0,.35)!important}}
+
+/* Final colorful cloud-label lettering. */
+.app-shell.home-active .theme-card.map-node .map-copy strong{background-image:linear-gradient(90deg,#f01863 0%,#ff8a00 24%,#9137ff 49%,#1677ff 74%,#00a96e 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;-webkit-text-stroke:.4px #211038!important;filter:saturate(1.35) contrast(1.12)}
+@media(max-width:600px){.app-shell.home-active .theme-card.map-node .map-copy strong{-webkit-text-stroke:.3px #211038!important}}
+
+/* Softer, slower color transition with a lifted shadow for the cloud labels. */
+.app-shell.home-active .theme-card.map-node .map-copy strong{background-image:linear-gradient(90deg,#ec4f86 0%,#df659d 24%,#9c64d7 50%,#558cda 75%,#42ad90 100%)!important;background-size:220% 100%!important;-webkit-text-stroke:.35px #271342!important;text-shadow:0 1px 0 rgba(255,255,255,.8),0 3px 4px rgba(43,24,79,.38),0 0 5px rgba(255,255,255,.25)!important}
+@media(max-width:600px){.app-shell.home-active .theme-card.map-node .map-copy strong{-webkit-text-stroke:.25px #271342!important;text-shadow:0 1px 0 rgba(255,255,255,.8),0 2px 3px rgba(43,24,79,.36)!important}}
+
+/* High-legibility colorful type: remove the pale highlight layer and keep the gradient compact. */
+.app-shell.home-active .theme-card.map-node .map-copy strong{background-image:linear-gradient(90deg,#d30050 0%,#9a27c4 45%,#126dcc 72%,#00815c 100%)!important;background-size:100% 100%!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;-webkit-text-stroke:.6px #160020!important;font-weight:900!important;text-shadow:0 2px 2px rgba(24,5,47,.48)!important;filter:saturate(1.45) contrast(1.25)}
+@media(max-width:600px){.app-shell.home-active .theme-card.map-node .map-copy strong{-webkit-text-stroke:.42px #160020!important;text-shadow:0 1px 2px rgba(24,5,47,.5)!important}}
