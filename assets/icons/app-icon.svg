@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">露娜的魔法英语</title>
+  <desc id="desc">紫色魔法皇冠和星星</desc>
+  <defs>
+    <linearGradient id="sky" x1="72" y1="42" x2="440" y2="474" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d5f2ff"/>
+      <stop offset=".52" stop-color="#e9d7ff"/>
+      <stop offset="1" stop-color="#f7bddd"/>
+    </linearGradient>
+    <linearGradient id="crown" x1="130" y1="125" x2="395" y2="360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#a481f7"/>
+      <stop offset="1" stop-color="#6b42c7"/>
+    </linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="15" stdDeviation="10" flood-color="#55328c" flood-opacity=".27"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#sky)"/>
+  <circle cx="102" cy="108" r="20" fill="#fff4ab" opacity=".9"/>
+  <circle cx="410" cy="140" r="12" fill="#fff" opacity=".85"/>
+  <path d="m392 214 8 18 19 8-19 8-8 19-8-19-19-8 19-8zM120 312l7 16 17 7-17 7-7 17-7-17-17-7 17-7z" fill="#fff7aa"/>
+  <g filter="url(#shadow)">
+    <path d="M127 179 200 251l56-109 56 109 73-72-19 168H146z" fill="url(#crown)" stroke="#5530a3" stroke-width="13" stroke-linejoin="round"/>
+    <path d="M147 347h218v48a25 25 0 0 1-25 25H172a25 25 0 0 1-25-25z" fill="#f9c941" stroke="#b5760b" stroke-width="13"/>
+    <circle cx="256" cy="347" r="20" fill="#fff6bc" stroke="#b5760b" stroke-width="10"/>
+  </g>
+  <path d="m256 79 12 29 31 12-31 12-12 31-12-31-31-12 31-12z" fill="#fff8bc"/>
+</svg>

@@ -3,6 +3,7 @@ import { wardrobeThumb } from './assets/oc-english/wardrobe.js';
 import { OC_WARDROBE } from './assets/oc-english/wardrobe-data.js';
 
 const CHILD_NAME = '荆宝';
+let deferredInstallPrompt = null;
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const save = (key, value) => localStorage.setItem(key, JSON.stringify(value));
@@ -392,6 +393,43 @@ $('#homePrimaryAction').addEventListener('click', () => selectTheme(state.active
 $('#ocActionButton').addEventListener('click', () => { $('#ocItemGrid').classList.add('child-choice-focus'); $('#ocItemGrid').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); setTimeout(() => $('#ocItemGrid').classList.remove('child-choice-focus'), 1000); });
 $('#soundToggle').addEventListener('click', () => { state.soundOn = !state.soundOn; $('#soundToggle').setAttribute('aria-pressed', String(state.soundOn)); $('#soundToggle').setAttribute('aria-label', state.soundOn ? '关闭声音' : '打开声音'); $('#soundToggle').classList.toggle('muted', !state.soundOn); if (!state.soundOn) window.speechSynthesis?.cancel(); });
 $('#parentButton').addEventListener('click', openParent); $('#closeParent').addEventListener('click', closeParent);
+function isStandaloneApp() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function updateInstallButton() {
+  const button = $('#installApp');
+  if (!button) return;
+  button.hidden = isStandaloneApp();
+  button.textContent = deferredInstallPrompt ? '安装到手机桌面' : '怎样添加到桌面';
+}
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  updateInstallButton();
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  updateInstallButton();
+  showToast('露娜的魔法英语已经安装到桌面啦！');
+});
+$('#installApp').addEventListener('click', async () => {
+  if (!deferredInstallPrompt) {
+    showToast('iPhone/iPad：Safari 点分享，再选“添加到主屏幕”；Android：浏览器菜单中选择“安装应用”。');
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  updateInstallButton();
+});
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {
+      // The game remains fully usable online if an older browser cannot register a worker.
+    });
+  });
+}
+updateInstallButton();
 $('#voiceTest').addEventListener('click', () => { chooseEnglishVoice(); speak(`Hello, ${CHILD_NAME}! I am Luna. Let us learn English together.`); });
 $('#childVoiceToggle').addEventListener('click', () => { state.childFriendlyVoice = !state.childFriendlyVoice; localStorage.setItem('luna-child-friendly-voice', String(state.childFriendlyVoice)); $('#childVoiceToggle').setAttribute('aria-pressed', String(state.childFriendlyVoice)); $('#childVoiceToggle').textContent = state.childFriendlyVoice ? '儿童感朗读：已开启' : '儿童感朗读：已关闭'; showToast(state.childFriendlyVoice ? '已使用更慢、更明亮的朗读方式。' : '已使用标准英语朗读方式。'); });
 $('#childVoiceToggle').setAttribute('aria-pressed', String(state.childFriendlyVoice)); $('#childVoiceToggle').textContent = state.childFriendlyVoice ? '儿童感朗读：已开启' : '儿童感朗读：已关闭';
