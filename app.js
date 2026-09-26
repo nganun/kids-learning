@@ -394,6 +394,7 @@ function setScreen(name, { push = true } = {}) {
   if (name === 'lesson' && !canStartLesson()) { showToast('今天的探险时间已完成，明天再来吧！'); name = 'home'; }
   state.screen = name;
   if (push && location.hash !== routeFor(name)) history.pushState({ screen: name, theme: state.activeTheme }, '', routeFor(name));
+  const lessonCrumb = $('#topbarLessonTitle'); lessonCrumb.querySelector('b').textContent = currentTheme().title;
   $('.app-shell').classList.toggle('home-active', name === 'home');
   $$('.screen').forEach((screen) => screen.classList.toggle('active', screen.id === `${name}Screen`));
   $$('.nav-item').forEach((button) => button.classList.toggle('active', button.dataset.screen === name));
@@ -620,7 +621,7 @@ function playRecitalLines(lines, card) {
 function renderRound() {
   const theme = currentTheme();
   renderLessonGroupSwitcher();
-  $('#lessonTitle').innerHTML = theme.title.includes(' ') ? `${theme.title.split(' ')[0]}<br />${theme.title.split(' ').slice(1).join(' ')}` : theme.title;
+  $('#topbarLessonTitle b').textContent = theme.title;
   if (state.completed) return renderCompletion();
   state.roundLocked = false;
   const game = currentRounds()[state.round];
@@ -933,6 +934,7 @@ function closeHanziBook() { $('#hanziBookModal').classList.remove('open'); $('#h
 function openAchievements() { $('#achievementList').innerHTML = ACHIEVEMENT_DEFINITIONS.map(({ id, label }) => `<article class="${state.achievements.includes(id) ? 'earned' : ''}"><b>${state.achievements.includes(id) ? '✦' : '○'}</b><span>${label}</span><small>${state.achievements.includes(id) ? '已获得' : '继续探险解锁'}</small></article>`).join(''); $('#achievementModal').classList.add('open'); $('#achievementModal').setAttribute('aria-hidden', 'false'); setTimeout(() => $('#closeAchievements').focus(), 80); }
 function closeAchievements() { $('#achievementModal').classList.remove('open'); $('#achievementModal').setAttribute('aria-hidden', 'true'); $('#achievementButton').focus(); }
 $$('[data-screen]').forEach((button) => button.addEventListener('click', () => setScreen(button.dataset.screen)));
+$('#topbarLessonTitle').addEventListener('click', () => { if (state.screen !== 'lesson') setScreen('lesson'); });
 $$('.mini-speak').forEach((button) => button.addEventListener('click', () => speak(button.dataset.say)));
 $('#playToday').addEventListener('click', () => selectTheme(state.activeTheme, true));
 $('#homePrimaryAction').addEventListener('click', () => selectTheme(state.activeTheme, true));
@@ -1013,4 +1015,4 @@ window.addEventListener('popstate', () => { const [,screen = 'home', theme] = lo
 document.addEventListener('keydown', handleLessonShortcuts);
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('#recitalConfigModal').classList.contains('open')) closeRecitalConfig(); else if (event.key === 'Escape' && $('#contentConfigModal').classList.contains('open')) closeContentConfig(); else if (event.key === 'Escape' && $('#parentModal').classList.contains('open')) closeParent(); else if (event.key === 'Escape' && $('#rewardModal').classList.contains('open')) closeReward(); else if (event.key === 'Escape' && $('#dailyModal').classList.contains('open')) closeDailyWrapUp(); else if (event.key === 'Escape' && $('#adminModal').classList.contains('open')) closeAdmin(); else if (event.key === 'Escape' && $('#hanziBookModal').classList.contains('open')) closeHanziBook(); else if (event.key === 'Escape' && $('#achievementModal').classList.contains('open')) closeAchievements(); });
 
-$('.app-shell').classList.add('home-active'); mountHomeMap(); renderWardrobe(); renderHome(); updateProgress(); renderParentModeState(); renderSpeechRateControl(); renderParentProfileControls(); if (location.hash) window.dispatchEvent(new PopStateEvent('popstate'));
+$('.app-shell').classList.add('home-active'); $('#topbarLessonTitle b').textContent = currentTheme().title; mountHomeMap(); renderWardrobe(); renderHome(); updateProgress(); renderParentModeState(); renderSpeechRateControl(); renderParentProfileControls(); if (location.hash) window.dispatchEvent(new PopStateEvent('popstate'));
