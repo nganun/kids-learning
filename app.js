@@ -383,8 +383,8 @@ function renderHome() {
     const reviewDue = themeNeedsReview(theme);
     const unavailable = state.lessonMode === 'review' && !done;
     const map = MAP_META[theme.id] || { name: theme.title, hint: theme.subtitle, icon: 'spark' };
-    const status = state.lessonMode === 'review' ? (done ? '再次探险' : '先完成学习') : (done ? '已经点亮 · 再去看看' : map.hint);
-    return `<button class="theme-card map-node map-${theme.id} ${theme.id === state.activeTheme ? 'active' : ''} ${unavailable ? 'needs-learning' : ''} ${theme.id === recommended ? 'recommended' : ''} ${reviewDue ? 'review-due' : ''}" type="button" data-theme="${theme.id}" aria-label="${map.name}，${status}"><span class="theme-orb map-icon">${mapIcon(map.icon)}</span><span class="map-copy"><strong>${map.name}</strong></span></button>`;
+    const status = state.lessonMode === 'review' ? (done ? '再次探险' : '先探索新知识') : (done ? '已经点亮 · 再去看看' : map.hint);
+    return `<button class="theme-card map-node map-${theme.id} ${theme.id === state.activeTheme ? 'active' : ''} ${unavailable ? 'needs-learning' : ''} ${theme.id === recommended ? 'recommended' : ''} ${reviewDue ? 'review-due' : ''}" type="button" data-theme="${theme.id}" aria-label="${map.name}，${status}"><span class="map-copy"><strong>${map.name}</strong></span></button>`;
   }).join('');
   $$('[data-theme]').forEach((button) => button.addEventListener('click', () => selectTheme(button.dataset.theme, true)));
   $$('[data-lesson-mode]').forEach((button) => {
@@ -407,7 +407,7 @@ function updateProgress() {
   $('#parentWords').textContent = masteredWordCount();
   $('#parentStreak').textContent = state.streak.count;
   $('#progressStars').textContent = `${Math.min(state.round, total)} / ${total}`;
-  $('#progressLabel').textContent = state.completed ? (state.lessonMode === 'review' ? '复习完成啦！' : '魔法完成啦！') : `第 ${state.round + 1} 关，共 ${total} 关`;
+  $('#progressLabel').textContent = state.completed ? (state.lessonMode === 'review' ? '魔法回顾完成啦！' : '魔法完成啦！') : `第 ${state.round + 1} 关，共 ${total} 关`;
   $('#progressFill').style.width = `${(Math.min(state.round, total) / total) * 100}%`;
 }
 
@@ -542,7 +542,7 @@ function handleCorrect(word, kind = 'match') {
 function completeReview() {
   state.completed = true;
   persistProgress();
-  showToast('复习完成，荆宝记得很棒！');
+  showToast('魔法回顾完成，记得很棒！');
 }
 function completeTheme() {
   const theme = currentTheme(); state.completed = true;
@@ -553,9 +553,9 @@ function completeTheme() {
 function renderCompletion() {
   const theme = currentTheme();
   const reviewing = state.lessonMode === 'review';
-  $('#roundChip').textContent = reviewing ? '复习完成' : '完成啦'; $('#promptSpeak').onclick = () => speak(reviewing ? `Great review, ${childName()}!` : `Great job, ${childName()}!`);
+  $('#roundChip').textContent = reviewing ? '魔法回顾完成' : '完成啦'; $('#promptSpeak').onclick = () => speak(reviewing ? `Great review, ${childName()}!` : `Great job, ${childName()}!`);
   $('#gameArea').innerHTML = reviewing
-    ? `<div class="completion"><div class="completion-crown">✦</div><h2>复习完成！<br /><em>${theme.title}</em></h2><p>荆宝已经把这些单词又记牢了一次。</p><button class="primary-button" type="button" id="backHome">回到魔法花园 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button></div>`
+    ? `<div class="completion"><div class="completion-crown">✦</div><h2>魔法回顾完成！<br /><em>${theme.title}</em></h2><p>已经把这些学习内容又记牢了一次。</p><button class="primary-button" type="button" id="backHome">回到魔法花园 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button></div>`
     : `<div class="completion"><div class="completion-crown">♕</div><h2>你完成了<br /><em>${theme.title}!</em></h2><p>魔法礼盒里有新的 OC-English 装扮。</p><div class="reward-chest-preview"><i></i><b>✦</b></div><button class="primary-button" type="button" id="openReward">打开魔法礼盒 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button></div>`;
   if (reviewing) $('#backHome').addEventListener('click', () => setScreen('home')); else $('#openReward').addEventListener('click', openReward);
   updateProgress();
