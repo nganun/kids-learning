@@ -62,16 +62,16 @@ let THEMES = {
   },
 };
 
-const ADMIN_DEFAULT = { pin: '2468', english: ['red', 'yellow', 'blue'], hanzi: ['人', '口', '大'] };
+const ADMIN_DEFAULT = { pin: '2468', english: ['red', 'yellow', 'blue'], hanzi: ['人', '大人', '人口'] };
 const adminContent = load('luna-admin-content-v1', ADMIN_DEFAULT);
-function safeEnglishWords(value) { return String(value).split(/[，,\n]/).map((word) => word.trim().toLowerCase()).filter((word) => /^[a-z]{1,16}$/.test(word)).slice(0, 8); }
-function safeHanzi(value) { return [...String(value)].filter((char) => /\p{Script=Han}/u.test(char)).slice(0, 8); }
+function safeEnglishWords(value) { return String(value).split(/[，,；;\n]/).map((word) => word.trim().toLowerCase()).filter((word) => /^[a-z]{1,16}$/.test(word)).slice(0, 8); }
+function safeHanzi(value) { return String(value).split(/[，,；;\n]/).map((term) => term.trim()).filter((term) => /^[\p{Script=Han}]{1,8}$/u.test(term)).slice(0, 8); }
 function textCard(text, fill = '#f1e8ff') { return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180"><rect width="240" height="180" rx="28" fill="${fill}"/><text x="120" y="108" text-anchor="middle" font-family="sans-serif" font-size="${text.length > 5 ? 42 : 72}" font-weight="800" fill="#6744a5">${text}</text></svg>`)}`; }
 function buildCustomTheme(id, title, subtitle, words, isHanzi = false) {
-  const fallback = isHanzi ? ['人', '口', '大'] : ['red', 'yellow', 'blue'];
+  const fallback = isHanzi ? ['人', '大人', '人口'] : ['red', 'yellow', 'blue'];
   const list = words.length >= 2 ? words : fallback;
-  const rounds = list.map((word) => ({ type: 'learn', chip: isHanzi ? '认识汉字' : '认识单词', word, image: isHanzi ? textCard(word, '#fff0dc') : wordImage(word) || textCard(word), zh: isHanzi ? `看一看，这是“${word}”。` : `看一看，这是 ${word}。` }));
-  const reviewRounds = list.map((word, index) => { const other = list[(index + 1) % list.length]; return { type: index % 2 ? 'listen' : 'match', chip: index % 2 ? '听音找一找' : '魔法复习', prompt: isHanzi ? `Find ${word}` : 'Which word matches?', word, image: isHanzi ? textCard(word, '#fff0dc') : wordImage(word) || textCard(word), zh: isHanzi ? '听一听，找到对应的汉字。' : '看图片，选出对应的英文单词。', choices: [word, other], correct: word }; });
+  const rounds = list.map((word) => ({ type: 'learn', chip: isHanzi ? (word.length > 1 ? '认识词组' : '认识汉字') : '认识单词', word, image: isHanzi ? textCard(word, '#fff0dc') : wordImage(word) || textCard(word), zh: isHanzi ? `看一看，读一读“${word}”。` : `看一看，这是 ${word}。` }));
+  const reviewRounds = list.map((word, index) => { const other = list[(index + 1) % list.length]; return { type: index % 2 ? 'listen' : 'match', chip: index % 2 ? '听音找一找' : '魔法复习', prompt: isHanzi ? `Find ${word}` : 'Which word matches?', word, image: isHanzi ? textCard(word, '#fff0dc') : wordImage(word) || textCard(word), zh: isHanzi ? '听一听，找到对应的汉字或词组。' : '看图片，选出对应的英文单词。', choices: [word, other], correct: word }; });
   return { id, title, subtitle, words: list, rewards: ['hat_wizard', 'gl_star', 'held_book'], rounds, reviewRounds };
 }
 function applyAdminContent() {
@@ -94,6 +94,25 @@ const WORD_SENTENCES = {
 };
 function wordImage(word) {
   return Object.values(THEMES).flatMap((theme) => theme.rounds).find((round) => round.word === word)?.image || '';
+}
+const MAP_META = {
+  color: { name: '彩虹花园', hint: '找一找会发光的颜色', icon: 'flower' },
+  animal: { name: '月光动物园', hint: '去和小动物打招呼', icon: 'paw' },
+  action: { name: '舞动广场', hint: '跳一跳，拍拍手', icon: 'spark' },
+  number: { name: '数字高塔', hint: '数一数城堡星星', icon: 'tower' },
+  hanzi: { name: '汉字图书塔', hint: '打开会说话的文字', icon: 'book' },
+  english: { name: '单词森林', hint: '收集新的英文叶片', icon: 'leaf' },
+};
+function mapIcon(type) {
+  const paths = {
+    flower: '<path d="M12 8.2C9 3.4 3.7 5.1 5.3 9.7c-4.7.4-4.7 6.1 0 6.5C3.7 20.9 9 22.6 12 17.8c3 4.8 8.3 3.1 6.7-1.6 4.7-.4 4.7-6.1 0-6.5C20.3 5.1 15 3.4 12 8.2Z"/><circle cx="12" cy="13" r="2.3"/>',
+    paw: '<circle cx="7.2" cy="7.8" r="1.8"/><circle cx="12" cy="5.8" r="1.8"/><circle cx="16.8" cy="7.8" r="1.8"/><path d="M12 20c-3.5 0-6-2.1-6-4.7 0-2.2 2.2-4 4.2-3.1.7.3 1.2.3 1.8 0 2-.9 4.2.9 4.2 3.1C18 17.9 15.5 20 12 20Z"/>',
+    spark: '<path d="m12 3 1.9 6.1L20 11l-6.1 1.9L12 19l-1.9-6.1L4 11l6.1-1.9L12 3Z"/>',
+    tower: '<path d="M5 21h14M7 21V9l5-5 5 5v12M4 9h3M17 9h3M10 21v-5h4v5M10 11h4"/>',
+    book: '<path d="M4.5 5.5A3.5 3.5 0 0 1 8 2h4v18H8a3.5 3.5 0 0 0-3.5 3V5.5ZM19.5 5.5A3.5 3.5 0 0 0 16 2h-4v18h4a3.5 3.5 0 0 1 3.5 3V5.5Z"/>',
+    leaf: '<path d="M20 4C10 4 5 8.5 5 15c0 2.8 1.8 5 4.6 5C16 20 20 11.7 20 4Z"/><path d="M5 20c2.7-4.8 6.4-8 11-10"/>',
+  };
+  return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[type] || paths.spark}</svg>`;
 }
 applyAdminContent();
 
@@ -177,6 +196,12 @@ function persistProgress() {
   localStorage.setItem('luna-active-profile-id', activeProfileId);
 }
 function saveOcAvatar() { persistProgress(); }
+function currentTheme() {
+  return THEMES[state.activeTheme] || THEMES.color;
+}
+function currentRounds() {
+  return state.lessonMode === 'review' ? currentTheme().reviewRounds : currentTheme().rounds;
+}
 function switchProfile(id) {
   if (id === activeProfileId || !profiles.some((profile) => profile.id === id)) return;
   persistProgress();
@@ -248,8 +273,8 @@ function speakChinese(text, onend) {
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = preferredChineseVoice?.lang || 'zh-CN';
   utterance.voice = preferredChineseVoice || chooseChineseVoice();
-  utterance.rate = .82;
-  utterance.pitch = 1.04;
+  utterance.rate = state.childFriendlyVoice ? .76 : .82;
+  utterance.pitch = state.childFriendlyVoice ? 1.14 : 1.04;
   utterance.volume = 1;
   const finish = () => { if (run === speechRun) onend?.(); };
   utterance.onend = finish;
@@ -283,6 +308,7 @@ function showToast(text) {
 }
 function setScreen(name) {
   state.screen = name;
+  $('.app-shell').classList.toggle('home-active', name === 'home');
   $$('.screen').forEach((screen) => screen.classList.toggle('active', screen.id === `${name}Screen`));
   $$('.nav-item').forEach((button) => button.classList.toggle('active', button.dataset.screen === name));
   if (name === 'lesson') renderRound();
@@ -321,6 +347,10 @@ function setDailyTask(task) {
   persistProgress(); renderHome(); updateProgress();
   if (finishedToday) setTimeout(openDailyWrapUp, 350);
 }
+function mountHomeMap() {
+  const scene = $('.garden-scene'); const map = $('.theme-map');
+  if (scene && map && map.parentElement !== scene) scene.append(map);
+}
 function renderHome() {
   const theme = currentTheme();
   $('#childNameGreeting').textContent = childName();
@@ -328,7 +358,7 @@ function renderHome() {
   $('#speechChildName').textContent = `Hi, ${childName()}!`;
   $('.mini-speak').dataset.say = `Hi, ${childName()}! Let's make magic!`;
   $('#todayThemeName').textContent = theme.title;
-  $('#homePrimaryAction').querySelector('span').textContent = state.lessonMode === 'review' ? '开始本主题复习' : '开始今天的学习';
+  $('#homePrimaryAction').querySelector('span').textContent = state.lessonMode === 'review' ? '继续探险复习' : '出发去探险';
   $('#todayThemeMeta').textContent = `${theme.subtitle} · 3 分钟 · ${theme.words.join(' / ')}`;
   $('#dailyMissionTitle').textContent = state.daily.claimed ? '今天的礼物已收到！' : '完成 3 个小目标';
   const tasks = [ ['round', '完成 1 个魔法小游戏'], ['theme', '完成 1 个魔法主题'], ['dress', '在衣橱换 1 件装扮'] ];
@@ -336,9 +366,11 @@ function renderHome() {
   $('#themeCards').innerHTML = Object.values(THEMES).map((theme) => {
     const done = state.completedThemes.includes(theme.id);
     const unavailable = state.lessonMode === 'review' && !done;
-    return `<button class="theme-card ${theme.id} ${theme.id === state.activeTheme ? 'active' : ''} ${unavailable ? 'needs-learning' : ''}" type="button" data-theme="${theme.id}"><span class="theme-orb">${theme.id === 'color' ? '✦' : theme.id === 'animal' ? '♡' : theme.id === 'number' ? '123' : theme.id === 'hanzi' ? '字' : theme.id === 'english' ? 'Ab' : '♪'}</span><strong>${theme.title}</strong><small>${theme.subtitle}</small><em>${state.lessonMode === 'review' ? (done ? '开始复习' : '先学习单词') : (done ? '已学过 · 可继续学习' : theme.words.slice(0, 3).join(' · '))}</em></button>`;
+    const map = MAP_META[theme.id] || { name: theme.title, hint: theme.subtitle, icon: 'spark' };
+    const status = state.lessonMode === 'review' ? (done ? '再次探险' : '先完成学习') : (done ? '已经点亮 · 再去看看' : map.hint);
+    return `<button class="theme-card map-node map-${theme.id} ${theme.id === state.activeTheme ? 'active' : ''} ${unavailable ? 'needs-learning' : ''}" type="button" data-theme="${theme.id}" aria-label="${map.name}，${status}"><span class="theme-orb map-icon">${mapIcon(map.icon)}</span><span class="map-copy"><strong>${map.name}</strong></span></button>`;
   }).join('');
-  $$('[data-theme]').forEach((button) => button.addEventListener('click', () => selectTheme(button.dataset.theme, false)));
+  $$('[data-theme]').forEach((button) => button.addEventListener('click', () => selectTheme(button.dataset.theme, true)));
   $$('[data-lesson-mode]').forEach((button) => {
     const active = button.dataset.lessonMode === state.lessonMode;
     button.classList.toggle('active', active); button.setAttribute('aria-selected', String(active));
@@ -390,12 +422,20 @@ function startLearnCountdown(seconds = 10) {
   }, 1000);
 }
 
+function speakForCurrentTheme(text, onend) {
+  return currentTheme().id === 'hanzi' ? speakChinese(text, onend) : speak(text, onend);
+}
 function autoReadWordCard(word) {
   const card = $('.learn-word-card');
+  const isHanzi = currentTheme().id === 'hanzi';
   const translation = WORD_TRANSLATIONS[word];
-  card?.classList.add('is-speaking', 'speaking-english');
-  // Start inside the original tap event whenever possible. The former 420 ms
-  // timeout made the card feel slow and could lose iOS's user-activation window.
+  card?.classList.add('is-speaking', isHanzi ? 'speaking-chinese' : 'speaking-english');
+  // Hanzi cards read the character itself in Chinese. Other courses keep the
+  // English-first, Chinese-explanation sequence.
+  if (isHanzi) {
+    speakChinese(word, () => card?.classList.remove('is-speaking', 'speaking-chinese'));
+    return;
+  }
   speak(word, () => {
     card?.classList.remove('speaking-english');
     card?.classList.add('speaking-chinese');
@@ -418,21 +458,21 @@ function renderRound() {
   state.roundLocked = false;
   const game = currentRounds()[state.round];
   $('#roundChip').textContent = game.chip;
-  $('#promptSpeak').onclick = () => speak(game.type === 'match' ? game.prompt : game.word);
+  $('#promptSpeak').onclick = () => speakForCurrentTheme(currentTheme().id === 'hanzi' ? game.word : (game.type === 'match' ? game.prompt : game.word));
   const area = $('#gameArea');
   if (game.type === 'learn') {
     const recordingAction = state.recordingEnabled ? '<button class="record-practice" id="recordPractice" type="button">跟我说一说</button><div id="practicePlayback"></div>' : '';
-    area.innerHTML = `<div class="learn-word-card"><img src="${game.image}" alt="${game.word} 的图片" /><div><p>Look and listen</p><h2>${game.word}</h2><strong class="word-translation">中文：${(WORD_TRANSLATIONS[game.word] || game.word)}</strong><span>${game.zh}</span></div><button class="primary-button" id="learnNext" type="button" disabled aria-disabled="true"><span class="learn-next-copy"><span id="learnNextLabel">先听一听（10）</span><span class="learn-countdown-track" aria-hidden="true"><i id="learnCountdownProgress"></i></span></span><svg viewBox="0 0 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button></div>${sentenceMarkup(game.word)}${recordingAction}`;
+    area.innerHTML = `<div class="learn-word-card"><img src="${game.image}" alt="${game.word} 的图片" /><div><p>${currentTheme().id === 'hanzi' ? '看一看，听一听' : 'Look and listen'}</p><h2>${game.word}</h2><strong class="word-translation">中文：${(WORD_TRANSLATIONS[game.word] || game.word)}</strong><span>${game.zh}</span></div><button class="primary-button" id="learnNext" type="button" disabled aria-disabled="true"><span class="learn-next-copy"><span id="learnNextLabel">先听一听（10）</span><span class="learn-countdown-track" aria-hidden="true"><i id="learnCountdownProgress"></i></span></span><svg viewBox="0 0 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button></div>${sentenceMarkup(game.word)}${recordingAction}`;
     $('#learnNext').addEventListener('click', () => handleCorrect(game.word, 'learn'));
     $('#recordPractice')?.addEventListener('click', recordPractice);
     startLearnCountdown(10);
   } else if (game.type === 'listen') {
     area.innerHTML = `<div class="match-word-card"><img src="${game.image}" alt="${game.word} 的图片" /><div class="game-copy"><h2>Listen<br /><em>and find</em></h2><strong class="match-translation">中文：${game.zh}</strong><p>先听一遍，再点图片。</p></div></div><button class="review-listen-action" id="reviewListenAction" type="button">听一听 <svg viewBox="0 0 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4Zm12.5 2A4.5 4.5 0 0 0 14 8v2a2.5 2.5 0 0 1 0 4v2a4.5 4.5 0 0 0 2.5-4Z"/></svg></button><div class="picture-choice-row">${game.choices.map((choice) => `<button class="picture-choice" type="button" data-choice="${choice}"><img src="${wordImage(choice)}" alt="${(WORD_TRANSLATIONS[choice] || choice)}" /><b>${(WORD_TRANSLATIONS[choice] || choice)}</b></button>`).join('')}</div>`;
-    $('#reviewListenAction').addEventListener('click', () => { speak(game.word); $$('.picture-choice', area).forEach((button) => button.classList.add('attention')); setTimeout(() => $$('.picture-choice', area).forEach((button) => button.classList.remove('attention')), 900); });
+    $('#reviewListenAction').addEventListener('click', () => { speakForCurrentTheme(game.word); $$('.picture-choice', area).forEach((button) => button.classList.add('attention')); setTimeout(() => $$('.picture-choice', area).forEach((button) => button.classList.remove('attention')), 900); });
     $$('[data-choice]', area).forEach((button) => button.addEventListener('click', () => handleChoice(button, game)));
   } else {
     area.innerHTML = `<div class="match-word-card"><img src="${game.image}" alt="${game.word} 的图片" /><div class="game-copy"><h2>${game.prompt.split(' ').slice(0, 2).join(' ')}<br /><em>${game.prompt.split(' ').slice(2).join(' ')}</em></h2><strong class="match-translation">中文：${(WORD_TRANSLATIONS[game.word] || game.word)}</strong><p>${game.zh}</p></div></div><button class="review-listen-action" id="reviewListenAction" type="button">先听一遍，再选单词 <svg viewBox="0 0 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4Zm12.5 2A4.5 4.5 0 0 0 14 8v2a4.5 4.5 0 0 1 0 4v2a4.5 2.5 0 0 0 2.5-4Z"/></svg></button><div class="word-choice-row">${game.choices.map((choice) => `<button class="word-choice ${theme.id}" type="button" data-choice="${choice}"><b>${choice}</b><span>点一个单词</span></button>`).join('')}</div>`;
-    $('#reviewListenAction').addEventListener('click', () => { speak(game.word); $$('.word-choice', area).forEach((button) => button.classList.add('attention')); setTimeout(() => $$('.word-choice', area).forEach((button) => button.classList.remove('attention')), 900); });
+    $('#reviewListenAction').addEventListener('click', () => { speakForCurrentTheme(game.word); $$('.word-choice', area).forEach((button) => button.classList.add('attention')); setTimeout(() => $$('.word-choice', area).forEach((button) => button.classList.remove('attention')), 900); });
     $$('[data-choice]', area).forEach((button) => button.addEventListener('click', () => handleChoice(button, game)));
   }
   bindSentenceButtons(area);
@@ -463,7 +503,7 @@ async function recordPractice() {
 function handleChoice(button, game) {
   if (state.roundLocked || button.disabled) return;
   if (button.dataset.choice === game.correct) { button.classList.add('correct'); handleCorrect(game.word); }
-  else { button.classList.add('try-again'); button.disabled = true; speak(game.prompt); showToast('再听一次，露娜相信你！'); }
+  else { button.classList.add('try-again'); button.disabled = true; speakForCurrentTheme(currentTheme().id === 'hanzi' ? game.word : game.prompt); showToast('再听一次，露娜相信你！'); }
 }
 function showWordCelebration(word) {
   const overlay = document.createElement('div');
@@ -606,7 +646,7 @@ async function importProgress(file) {
     state.round = 0; state.completed = false; state.roundLocked = false;
     persistProgress(); renderHome(); renderWardrobe(); renderParentProfileControls(); setScreen('home'); showToast('学习记录导入成功。');
   } catch {
-    showToast('这个备份文件无法导入，请选择由露娜学园导出的 JSON 文件。');
+    showToast('这个备份文件无法导入，请选择由魔法城堡导出的 JSON 文件。');
   }
 }
 
@@ -645,7 +685,7 @@ window.addEventListener('beforeinstallprompt', (event) => {
 window.addEventListener('appinstalled', () => {
   deferredInstallPrompt = null;
   updateInstallButton();
-  showToast('露娜的魔法学园已经安装到桌面啦！');
+  showToast('魔法城堡已经安装到桌面啦！');
 });
 $('#installApp').addEventListener('click', async () => {
   if (!deferredInstallPrompt) {
@@ -675,4 +715,4 @@ $('#parentModal').addEventListener('click', (event) => { if (event.target === $(
 $('#resetProgress').addEventListener('click', () => { state.round = 0; state.completed = false; state.roundLocked = false; closeParent(); setScreen('home'); showToast('今天的挑战已经从第一关重新开始。'); });
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('#parentModal').classList.contains('open')) closeParent(); if (event.key === 'Escape' && $('#rewardModal').classList.contains('open')) closeReward(); if (event.key === 'Escape' && $('#dailyModal').classList.contains('open')) closeDailyWrapUp(); if (event.key === 'Escape' && $('#adminModal').classList.contains('open')) closeAdmin(); });
 
-renderWardrobe(); renderHome(); updateProgress(); renderParentProfileControls();
+$('.app-shell').classList.add('home-active'); mountHomeMap(); renderWardrobe(); renderHome(); updateProgress(); renderParentProfileControls();

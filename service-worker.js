@@ -1,4 +1,4 @@
-const CACHE_NAME = 'luna-magic-academy-v5';
+const CACHE_NAME = 'magic-castle-v18';
 const APP_SHELL = [
   './',
   './index.html',
@@ -8,6 +8,8 @@ const APP_SHELL = [
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',
   './assets/icons/app-icon.svg',
+  './assets/brand/magic-castle-logo.svg',
+  './assets/maps/castle-adventure-map.svg',
   './assets/oc-english/character.js',
   './assets/oc-english/wardrobe.js',
   './assets/oc-english/wardrobe-data.js',

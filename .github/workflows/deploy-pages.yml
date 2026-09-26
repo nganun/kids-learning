@@ -1,4 +1,4 @@
-name: Deploy Luna Magic Academy to GitHub Pages
+name: Deploy Magic Castle to GitHub Pages
 
 on:
   push:
