@@ -1,4 +1,4 @@
-const CACHE_NAME = 'luna-magic-english-v1';
+const CACHE_NAME = 'luna-magic-english-v3';
 const APP_SHELL = [
   './',
   './index.html',
@@ -12,6 +12,9 @@ const APP_SHELL = [
   './assets/oc-english/wardrobe.js',
   './assets/oc-english/wardrobe-data.js',
   './assets/vocabulary/red.svg',
+  './assets/vocabulary/one.svg',
+  './assets/vocabulary/two.svg',
+  './assets/vocabulary/three.svg',
   './assets/vocabulary/yellow.svg',
   './assets/vocabulary/blue.svg',
   './assets/vocabulary/cat.svg',

@@ -40,8 +40,8 @@
           <div class="garden-scene">
             <span class="star-speck speck-one" aria-hidden="true"></span><span class="star-speck speck-two" aria-hidden="true"></span><span class="star-speck speck-three" aria-hidden="true"></span>
             <div class="welcome-copy">
-              <p class="greeting">下午好，荆宝</p>
-              <h1 id="homeTitle">荆宝，今天<br />让英文变成魔法。</h1>
+              <p class="greeting">下午好，<span id="childNameGreeting">荆宝</span></p>
+              <h1 id="homeTitle"><span id="homeChildName">荆宝</span>，今天<br />让英文变成魔法。</h1>
               <p class="helper-text">完成一个小挑战，为露娜的衣橱添一件新礼物吧。</p>
               <button class="primary-button start-button child-primary-action" id="homePrimaryAction" type="button">
                 <span>开始学习单词</span>
@@ -55,7 +55,7 @@
               <div class="magic-orb orb-a" aria-hidden="true"></div><div class="magic-orb orb-b" aria-hidden="true"></div>
               <div class="home-oc-avatar" id="homeOcAvatar" aria-label="露娜 OC-English 角色"></div>
               <div class="ground" aria-hidden="true"><span></span><span></span><span></span></div>
-              <div class="speech-bubble"><span>Hi, 荆宝!</span><button type="button" class="mini-speak" data-say="Hi, 荆宝! Let's make magic!" aria-label="播放露娜说的话"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4Zm12.5 2A4.5 4.5 0 0 0 14 8v2a2.5 2.5 0 0 1 0 4v2a4.5 4.5 0 0 0 2.5-4Z"/></svg></button></div>
+              <div class="speech-bubble"><span id="speechChildName">Hi, 荆宝!</span><button type="button" class="mini-speak" data-say="Hi, 荆宝! Let's make magic!" aria-label="播放露娜说的话"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4Zm12.5 2A4.5 4.5 0 0 0 14 8v2a2.5 2.5 0 0 1 0 4v2a4.5 4.5 0 0 0 2.5-4Z"/></svg></button></div>
             </div>
           </div>
 
@@ -119,15 +119,31 @@
     </div>
 
     <div class="modal" id="parentModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="parentTitle">
-      <div class="modal-card">
+      <div class="modal-card parent-modal-card">
         <button class="modal-close icon-button" id="closeParent" type="button" aria-label="关闭家长小站"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
-        <p class="section-kicker">家长小站</p><h2 id="parentTitle">今天的魔法足迹</h2>
-        <div class="parent-stats"><div><b id="parentStars">0</b><span>获得星星</span></div><div><b id="parentWords">0</b><span>认识颜色</span></div><div><b>3 分钟</b><span>建议时长</span></div></div>
-        <p class="parent-note">这里没有广告、外链或陌生人互动。学习数据只保存在这台设备中。</p>
-        <div class="voice-preview"><span>英文声音会优先使用设备中较自然的英语语音。儿童感朗读会更慢、语调更明亮；它不是录制的真实儿童声音。</span><div class="voice-preview-actions"><button class="secondary-button" id="voiceTest" type="button">试听英文声音</button><button class="secondary-button" id="childVoiceToggle" type="button" aria-pressed="true"></button></div></div>
-        <button class="secondary-button" id="installApp" type="button">安装到手机桌面</button>
-        <button class="secondary-button" id="resetProgress" type="button">重新开始今天的挑战</button>
+        <section id="parentGate" class="parent-gate" aria-labelledby="parentTitle">
+          <p class="section-kicker">家长小站</p><h2 id="parentTitle">先请爸爸妈妈帮个小忙</h2>
+          <p>为了避免孩子误触设置，请完成这道小问题。</p>
+          <form id="parentGateForm" class="parent-gate-form">
+            <label for="parentGateAnswer" id="parentGateQuestion">计算题加载中</label>
+            <input id="parentGateAnswer" type="number" inputmode="numeric" autocomplete="off" required />
+            <button class="primary-button" type="submit">进入家长小站</button>
+          </form>
+          <p class="parent-gate-error" id="parentGateError" role="alert" hidden>再试一次。</p>
+        </section>
+        <section id="parentContent" hidden aria-label="家长设置与学习记录">
+          <p class="section-kicker">家长小站</p><h2>今天的魔法足迹</h2>
+          <div class="profile-controls"><label for="profileSelect">正在使用</label><select id="profileSelect" aria-label="选择孩子档案"></select><div class="profile-create"><input id="newProfileName" maxlength="12" placeholder="新孩子昵称" aria-label="新孩子昵称" /><button class="secondary-button" id="createProfile" type="button">添加档案</button></div></div>
+          <div class="parent-stats"><div><b id="parentStars">0</b><span>获得星星</span></div><div><b id="parentWords">0</b><span>认识单词</span></div><div><b id="parentStreak">0</b><span>连续学习</span></div><div><b>3 分钟</b><span>建议时长</span></div></div>
+          <p class="parent-note">这里没有广告、外链或陌生人互动。学习记录只保存在这台设备中；录音不会上传或长期保存。</p>
+          <div class="voice-preview"><span>英文声音会优先使用设备中较自然的英语语音。儿童感朗读会更慢、语调更明亮；它不是录制的真实儿童声音。</span><div class="voice-preview-actions"><button class="secondary-button" id="voiceTest" type="button">试听英文声音</button><button class="secondary-button" id="childVoiceToggle" type="button" aria-pressed="true"></button><button class="secondary-button" id="recordingToggle" type="button" aria-pressed="false"></button></div></div>
+          <div class="parent-action-grid"><button class="secondary-button" id="installApp" type="button">安装到手机桌面</button><button class="secondary-button" id="exportProgress" type="button">导出学习记录</button><button class="secondary-button" id="importProgress" type="button">导入学习记录</button><button class="secondary-button" id="resetProgress" type="button">重新开始今天的挑战</button></div>
+          <input id="importProgressFile" type="file" accept="application/json" hidden />
+        </section>
       </div>
+    </div>
+    <div class="modal daily-modal" id="dailyModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="dailyTitle">
+      <div class="reward-card daily-wrap-card"><p class="section-kicker">今天完成啦</p><h2 id="dailyTitle">魔法任务全完成！</h2><p id="dailyWrapCopy">明天也来和露娜一起学英文吧。</p><div class="daily-streak-badge">连续学习 <b id="dailyWrapStreak">1</b> 天</div><div class="daily-wrap-actions"><button class="secondary-button" id="dailyWrapHome" type="button">回到花园</button><button class="primary-button" id="dailyWrapCloset" type="button">去衣橱看看</button></div></div>
     </div>
     <div class="modal reward-modal" id="rewardModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="rewardTitle">
       <div class="reward-card">
