@@ -11,3 +11,10 @@ android/app/build/
 
 # Local environment
 .DS_Store
+
+# Local learning exports (may contain child profiles and progress)
+luna-learning-*.json
+
+# Local Codex skill installation metadata
+.agents/
+skills-lock.json

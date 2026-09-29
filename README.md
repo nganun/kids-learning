@@ -184,3 +184,7 @@ git push origin v1.0.1
 推送 Tag 后，在 GitHub Actions 查看 `Release Magic Castle Android APK` 工作流。工作流完成后，可在 GitHub Releases 下载 APK。
 
 > Tag 一旦推送即会触发发布，请确认版本号、提交内容和本机测试无误后再推送。
+
+### Android 原生朗读与系统界面
+
+Android APK 会优先使用原生 Text-to-Speech 朗读英文、汉字与朗诵文本；若设备没有安装中文朗读语音，App 会提示并尝试打开系统语音数据安装页。Android 状态栏使用浅紫色主题，启动图标复用网页/PWA 的 `assets/icons/app-icon-512.png`。

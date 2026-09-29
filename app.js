@@ -68,12 +68,16 @@ let THEMES = {
 
 const ADMIN_DEFAULT = {
   pin: '2468',
-  english: ['red', 'yellow', 'blue'],
-  hanzi: ['人', '大人', '人口'],
-  englishGroups: [{ id: 'english-basics', name: '基础单词', words: ['red', 'yellow', 'blue'] }],
-  hanziGroups: [{ id: 'hanzi-basics', name: '汉字启蒙', words: ['人', '大人', '人口'] }],
-  activeEnglishGroupId: 'english-basics',
-  activeHanziGroupId: 'hanzi-basics',
+  // Default resource set derived from luna-learning-2026-09-29.json.
+  english: ['red', 'green'],
+  hanzi: ['人', '灶', '灶台', '面粉', '厨房', '小猫', '胡须', '入口', '兴高采烈', '白色'],
+  englishGroups: [{ id: 'english-colors', name: '颜色单词', words: ['red', 'green'] }],
+  hanziGroups: [
+    { id: 'hanzi-kitchen', name: '厨房词汇', words: ['人', '灶', '灶台', '面粉', '厨房'] },
+    { id: 'hanzi-life', name: '生活词语', words: ['小猫', '胡须', '入口', '兴高采烈', '白色'] },
+  ],
+  activeEnglishGroupId: 'english-colors',
+  activeHanziGroupId: 'hanzi-kitchen',
   recitalPieces: [
     { id: 'recital-spring-dawn', title: '春晓', lines: ['春眠不觉晓，', '处处闻啼鸟。'] },
     { id: 'recital-tower', title: '登鹳雀楼', lines: ['白日依山尽，', '黄河入海流。'] },
@@ -81,8 +85,8 @@ const ADMIN_DEFAULT = {
   activeRecitalPieceId: 'recital-spring-dawn',
 };
 const adminContent = load('luna-admin-content-v1', ADMIN_DEFAULT);
-function safeEnglishWords(value) { return String(value).split(/[，,；;\n]/).map((word) => word.trim().toLowerCase()).filter((word) => /^[a-z]{1,16}$/.test(word)).slice(0, 8); }
-function safeHanzi(value) { return String(value).split(/[，,；;\n]/).map((term) => term.trim()).filter((term) => /^[\p{Script=Han}]{1,8}$/u.test(term)).slice(0, 8); }
+function safeEnglishWords(value) { return String(value).split(/[，,；;\n]/).map((word) => word.trim().toLowerCase()).filter((word) => /^[a-z]{1,16}$/.test(word)).slice(0, 24); }
+function safeHanzi(value) { return String(value).split(/[，,；;\n]/).map((term) => term.trim()).filter((term) => /^[\p{Script=Han}]{1,8}$/u.test(term)).slice(0, 24); }
 function contentGroupKey(kind) { return `${kind}Groups`; }
 function activeContentGroupKey(kind) { return `active${kind[0].toUpperCase()}${kind.slice(1)}GroupId`; }
 function defaultContentWords(kind) { return kind === 'hanzi' ? ADMIN_DEFAULT.hanzi : ADMIN_DEFAULT.english; }
@@ -141,7 +145,7 @@ function applyAdminContent() {
 
 
 const WORD_TRANSLATIONS = {
-  red: '红色', yellow: '黄色', blue: '蓝色',
+  red: '红色', green: '绿色', yellow: '黄色', blue: '蓝色',
   cat: '小猫', dog: '小狗', rabbit: '小兔子',
   jump: '跳一跳', clap: '拍拍手', dance: '跳舞',
   one: '一', two: '二', three: '三',
@@ -336,12 +340,32 @@ function nativeTextToSpeech() {
   if (!window.Capacitor?.isNativePlatform?.()) return null;
   return window.Capacitor.Plugins?.TextToSpeech || window.Capacitor.registerPlugin?.('TextToSpeech') || null;
 }
+const requestedTtsLanguageInstall = new Set();
 function speakWithNativeTts(text, options, onend) {
   const plugin = nativeTextToSpeech();
   if (!plugin) return false;
-  plugin.speak({ text, volume: 1, category: 'ambient', queueStrategy: 0, ...options })
-    .then(() => onend?.())
-    .catch(() => onend?.());
+  const finish = () => onend?.();
+  const start = () => plugin.speak({ text, volume: 1, category: 'ambient', queueStrategy: 0, ...options })
+    .then(finish)
+    .catch(() => {
+      if (options.lang?.startsWith('zh')) {
+        showToast('这台设备还没有可用的中文朗读语音，请安装系统中文语音后再试。');
+        if (!requestedTtsLanguageInstall.has(options.lang)) { requestedTtsLanguageInstall.add(options.lang); plugin.openInstall?.().catch(() => {}); }
+      }
+      finish();
+    });
+  if (options.lang?.startsWith('zh') && plugin.isLanguageSupported) {
+    plugin.isLanguageSupported({ lang: options.lang })
+      .then(({ supported }) => {
+        if (supported) start();
+        else {
+          showToast('这台设备还没有可用的中文朗读语音，请安装系统中文语音后再试。');
+          if (!requestedTtsLanguageInstall.has(options.lang)) { requestedTtsLanguageInstall.add(options.lang); plugin.openInstall?.().catch(() => {}); }
+          finish();
+        }
+      })
+      .catch(start);
+  } else start();
   return true;
 }
 function stopNativeTts() { nativeTextToSpeech()?.stop?.().catch(() => {}); }
