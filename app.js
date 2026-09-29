@@ -332,9 +332,26 @@ function chooseChineseVoice() {
     || null;
   return preferredChineseVoice;
 }
+function nativeTextToSpeech() {
+  if (!window.Capacitor?.isNativePlatform?.()) return null;
+  return window.Capacitor.Plugins?.TextToSpeech || window.Capacitor.registerPlugin?.('TextToSpeech') || null;
+}
+function speakWithNativeTts(text, options, onend) {
+  const plugin = nativeTextToSpeech();
+  if (!plugin) return false;
+  plugin.speak({ text, volume: 1, category: 'ambient', queueStrategy: 0, ...options })
+    .then(() => onend?.())
+    .catch(() => onend?.());
+  return true;
+}
+function stopNativeTts() { nativeTextToSpeech()?.stop?.().catch(() => {}); }
 function speak(text, onend) {
   const run = ++speechRun;
-  if (!state.soundOn || !('speechSynthesis' in window)) { onend?.(); return false; }
+  if (!state.soundOn) { onend?.(); return false; }
+  const nativeFinished = () => { if (run === speechRun) onend?.(); };
+  const nativeRate = clamp((state.childFriendlyVoice ? .80 : .84) * globalSpeechRate, .1, 10);
+  if (speakWithNativeTts(text, { lang: 'en-US', rate: nativeRate, pitch: state.childFriendlyVoice ? 1.12 : 1.05 }, nativeFinished)) return true;
+  if (!('speechSynthesis' in window)) { nativeFinished(); return false; }
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = preferredEnglishVoice?.lang || 'en-US';
@@ -350,7 +367,11 @@ function speak(text, onend) {
 }
 function speakChinese(text, onend) {
   const run = ++speechRun;
-  if (!state.soundOn || !('speechSynthesis' in window)) { onend?.(); return false; }
+  if (!state.soundOn) { onend?.(); return false; }
+  const nativeFinished = () => { if (run === speechRun) onend?.(); };
+  const nativeRate = clamp((state.childFriendlyVoice ? .76 : .82) * globalSpeechRate, .1, 10);
+  if (speakWithNativeTts(text, { lang: 'zh-CN', rate: nativeRate, pitch: state.childFriendlyVoice ? 1.14 : 1.04 }, nativeFinished)) return true;
+  if (!('speechSynthesis' in window)) { nativeFinished(); return false; }
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = preferredChineseVoice?.lang || 'zh-CN';
   utterance.voice = preferredChineseVoice || chooseChineseVoice();
@@ -644,7 +665,7 @@ function renderRound() {
     area.innerHTML = `<article class="recital-card"><div class="recital-curtain" aria-hidden="true"><i></i><i></i></div><p class="recital-kicker">朗诵小舞台</p><div class="recital-mode-switch" role="group" aria-label="朗诵方式"><button type="button" class="${wholePiece ? '' : 'active'}" data-recital-mode="line" aria-pressed="${!wholePiece}">单句朗诵</button><button type="button" class="${wholePiece ? 'active' : ''}" data-recital-mode="whole" aria-pressed="${wholePiece}">整篇朗诵</button></div><h2>${escapeHtml(game.title || game.word)}</h2><p class="recital-line-label">${escapeHtml(lineLabel)}</p><button class="recital-text ${wholePiece ? 'whole-piece' : ''}" id="reciteListen" type="button" aria-label="播放《${escapeHtml(game.title || game.word)}》朗诵">${manuscript}<small>${wholePiece ? '文稿可上下滚动；朗读时会自动定位到当前句' : '点文本，听露娜朗读'}</small></button><p class="recital-tip">${wholePiece ? '听完整篇后，试着一口气朗诵下来。' : game.zh}</p>${lessonPrimaryActionsMarkup()}${recordingAction}</article>`;
     const readText = () => wholePiece ? playRecitalLines(piece.lines, $('#reciteListen')) : (recitalPlaybackId += 1, speakChinese(recitalText));
     $('#reciteListen').addEventListener('click', readText);
-    $$('[data-recital-mode]', area).forEach((button) => button.addEventListener('click', () => { const mode = button.dataset.recitalMode; if (mode !== state.recitalMode) { recitalPlaybackId += 1; state.recitalMode = mode; state.round = 0; state.completed = false; window.speechSynthesis?.cancel(); renderRound(); } }));
+    $$('[data-recital-mode]', area).forEach((button) => button.addEventListener('click', () => { const mode = button.dataset.recitalMode; if (mode !== state.recitalMode) { recitalPlaybackId += 1; state.recitalMode = mode; state.round = 0; state.completed = false; window.speechSynthesis?.cancel(); stopNativeTts(); renderRound(); } }));
     $('#learnNext').addEventListener('click', () => handleCorrect(game.word, state.lessonMode === 'review' ? 'review' : 'learn'));
     $('#recordPractice')?.addEventListener('click', recordPractice);
     startLearnCountdown(3); window.setTimeout(readText, 180);
@@ -939,7 +960,7 @@ $$('.mini-speak').forEach((button) => button.addEventListener('click', () => spe
 $('#playToday').addEventListener('click', () => selectTheme(state.activeTheme, true));
 $('#homePrimaryAction').addEventListener('click', () => selectTheme(state.activeTheme, true));
 $('#magicHouse').addEventListener('click', () => { setScreen('closet'); showToast('欢迎来到魔法屋，给露娜换上新装吧！'); });
-$('#soundToggle').addEventListener('click', () => { state.soundOn = !state.soundOn; $('#soundToggle').setAttribute('aria-pressed', String(state.soundOn)); $('#soundToggle').setAttribute('aria-label', state.soundOn ? '关闭声音' : '打开声音'); $('#soundToggle').classList.toggle('muted', !state.soundOn); if (!state.soundOn) window.speechSynthesis?.cancel(); });
+$('#soundToggle').addEventListener('click', () => { state.soundOn = !state.soundOn; $('#soundToggle').setAttribute('aria-pressed', String(state.soundOn)); $('#soundToggle').setAttribute('aria-label', state.soundOn ? '关闭声音' : '打开声音'); $('#soundToggle').classList.toggle('muted', !state.soundOn); if (!state.soundOn) { window.speechSynthesis?.cancel(); stopNativeTts(); } });
 $('#parentButton').addEventListener('click', openParent); $('#closeParent').addEventListener('click', closeParent); $('#disableParentMode').addEventListener('click', disableParentMode);
 $$('[data-parent-tab]').forEach((button) => button.addEventListener('click', () => setParentTab(button.dataset.parentTab)));
 $('#parentGateForm').addEventListener('submit', (event) => { event.preventDefault(); if (Number($('#parentGateAnswer').value) === parentGateAnswer) unlockParent(); else { $('#parentGateError').hidden = false; $('#parentGateAnswer').select(); } });

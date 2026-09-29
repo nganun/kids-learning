@@ -1,6 +1,6 @@
 {
   "name": "magic-castle",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Magic Castle web app and Android wrapper.",
   "scripts": {
@@ -13,6 +13,7 @@
     "@capacitor/cli": "6.2.1"
   },
   "dependencies": {
+    "@capacitor-community/text-to-speech": "5.1.0",
     "@capacitor/android": "6.2.1",
     "@capacitor/core": "6.2.1"
   }
