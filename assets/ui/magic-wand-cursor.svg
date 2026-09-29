@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-  <defs><linearGradient id="wand" x1="12" y1="13" x2="37" y2="38" gradientUnits="userSpaceOnUse"><stop stop-color="#ffd96a"/><stop offset="1" stop-color="#9a68e5"/></linearGradient></defs>
-  <path d="m15 34 19-19 5 5-19 19z" fill="url(#wand)" stroke="#4d337f" stroke-width="3" stroke-linejoin="round"/>
-  <path d="m13 10 3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#fff2a5" stroke="#704ab0" stroke-width="2" stroke-linejoin="round"/>
-  <circle cx="34" cy="34" r="3" fill="#f27fb0" stroke="#704a98" stroke-width="2"/>
-</svg>

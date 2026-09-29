@@ -10,9 +10,7 @@
 .app-shell.home-active .screen, .app-shell.home-active .screen.active { height:100%; min-height:0; overflow:hidden; }
 .app-shell.home-active #homeScreen.active { display:block; }
 .app-shell.home-active .garden-scene { display:block; height:100%; min-height:0; padding:0; overflow:hidden; }
-.app-shell.home-active .home-bottom { display:none; }
 .app-shell.home-active .theme-map { position:absolute; inset:0; z-index:1; display:grid; place-items:stretch; padding:0; background:transparent; }
-.app-shell.home-active .theme-map-heading { display:none; }
 .app-shell.home-active .theme-map .lesson-mode-switch { position:absolute; z-index:6; top:14px; left:50%; transform:translateX(-50%); margin:0; padding:4px; background:rgba(255,255,255,.84); box-shadow:0 5px 14px rgba(53,39,105,.15); backdrop-filter:blur(7px); }
 .app-shell.home-active .theme-map .lesson-mode-button { min-height:34px; padding:0 16px; font-size:12px; }
 .app-shell.home-active .theme-cards { position:relative; width:100%; height:100%; margin:0; overflow:hidden; border:0; border-radius:0; background:#bce6e7 url('../../assets/scenes/adventure-map/magic-castle-adventure-map.jpeg') center/cover no-repeat; box-shadow:none; }
@@ -38,10 +36,6 @@
 .map-action { left:18%; top:78%; }
 .map-hanzi { right:18%; top:77%; }
 .daily-route { position:absolute; z-index:7; left:50%; bottom:14px; transform:translateX(-50%); min-height:38px; padding:0 15px; border:3px solid #fff; border-radius:999px; background:rgba(255,248,195,.93); color:#684792; box-shadow:0 4px 0 rgba(102,70,146,.2); font-weight:900; white-space:nowrap; }
-
-/* Other home controls */
-.expedition-image-button { display:block; width:min(100%,340px); padding:0; border:0; background:transparent; }
-.expedition-image-button img { display:block; width:100%; height:auto; filter:drop-shadow(0 7px 0 rgba(83,58,139,.27)); }
 
 @media (min-width:601px) {
   html, body { width:100%; min-width:0; background:#edf0ff; }

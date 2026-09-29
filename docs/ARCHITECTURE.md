@@ -39,9 +39,9 @@ assets/
 
 ## 平台与构建
 
-- `scripts/build-web.mjs`：从源目录生成 `www/` 静态包。
+- `scripts/build-web.mjs`：从源目录生成 `dist/` 静态包。
 - `android/`：Capacitor Android 外壳、原生 TTS、系统栏和图标资源。
-- `.github/workflows/deploy-pages.yml`：发布 `www/` 到 GitHub Pages。
+- `.github/workflows/deploy-pages.yml`：发布 `dist/` 到 GitHub Pages。
 - `.github/workflows/release-android-apk.yml`：推送 `v*` Tag 后构建并发布 Android Debug APK。
 
 ## 维护规则
@@ -51,4 +51,4 @@ assets/
 3. 新的翻译、示例句、地图名称放入 `features/content-catalog.js`。
 4. 新媒体资源按用途放入 `assets/` 的对应子目录，避免直接堆放在根目录。
 5. 新屏幕样式放入 `styles/screens/`；共享视觉规则保留在 `style.css`。
-6. `www/`、Gradle 构建输出、APK 和本机学习导出数据均是生成或本机数据，不提交到仓库。
+6. `dist/`、Gradle 构建输出、APK 和本机学习导出数据均是生成或本机数据，不提交到仓库。

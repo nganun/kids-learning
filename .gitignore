@@ -1,6 +1,6 @@
 # Node / Capacitor
 node_modules/
-www/
+dist/
 
 # Android / Gradle output
 android/.gradle/

@@ -65,7 +65,7 @@ python3 -m http.server 8000
 
 ## Android APK（Capacitor）
 
-项目现在同时保留静态网页和 Android 包装层：GitHub Pages 继续发布 `www/` 中构建出的静态站点；Android 使用同一套网页资源同步到 Capacitor WebView 中。
+项目现在同时保留静态网页和 Android 包装层：GitHub Pages 继续发布 `dist/` 中构建出的静态站点；Android 使用同一套网页资源同步到 Capacitor WebView 中。
 
 ### 本机构建调试 APK
 
