@@ -136,6 +136,20 @@ function buildCustomTheme(id, title, subtitle, words, isHanzi = false) {
   const reviewRounds = list.map((word, index) => { const other = list[(index + 1) % list.length]; return { type: index % 2 ? 'listen' : 'match', chip: index % 2 ? '听音找一找' : '魔法复习', prompt: isHanzi ? `Find ${word}` : 'Which word matches?', word, image: isHanzi ? textCard(word, '#fff0dc') : wordImage(word) || textCard(word), zh: isHanzi ? '听一听，找到对应的汉字或词组。' : '看图片，选出对应的英文单词。', choices: [word, other], correct: word }; });
   return { id, title, subtitle, words: list, rewards: ['hat_wizard', 'gl_star', 'held_book'], rounds, reviewRounds };
 }
+function installBundledLearningResources() {
+  const version = Number(adminContent.bundledResourceVersion || 0);
+  if (version >= 2) return;
+  const appendMissingGroups = (kind, defaults) => {
+    const key = contentGroupKey(kind);
+    const existing = Array.isArray(adminContent[key]) ? adminContent[key] : [];
+    defaults.forEach((group) => { if (!existing.some((item) => item?.id === group.id)) existing.push({ ...group, words: [...group.words] }); });
+    adminContent[key] = existing;
+  };
+  appendMissingGroups('english', ADMIN_DEFAULT.englishGroups);
+  appendMissingGroups('hanzi', ADMIN_DEFAULT.hanziGroups);
+  adminContent.bundledResourceVersion = 2;
+  save('luna-admin-content-v1', adminContent);
+}
 function applyAdminContent() {
   const english = activeContentGroup('english'); const hanzi = activeContentGroup('hanzi');
   THEMES.english = buildCustomTheme('english', '英文单词', english.name, english.words);
@@ -182,6 +196,7 @@ function mapIcon(type) {
   };
   return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[type] || paths.spark}</svg>`;
 }
+installBundledLearningResources();
 applyAdminContent();
 
 const OC_CATEGORY_META = [
@@ -338,7 +353,7 @@ function chooseChineseVoice() {
 }
 function nativeTextToSpeech() {
   if (!window.Capacitor?.isNativePlatform?.()) return null;
-  return window.Capacitor.Plugins?.TextToSpeech || window.Capacitor.registerPlugin?.('TextToSpeech') || null;
+  return window.Capacitor.Plugins?.MagicTextToSpeech || window.Capacitor.registerPlugin?.('MagicTextToSpeech') || null;
 }
 const requestedTtsLanguageInstall = new Set();
 function speakWithNativeTts(text, options, onend) {
@@ -396,6 +411,8 @@ function speakChinese(text, onend) {
   const nativeRate = clamp((state.childFriendlyVoice ? .76 : .82) * globalSpeechRate, .1, 10);
   if (speakWithNativeTts(text, { lang: 'zh-CN', rate: nativeRate, pitch: state.childFriendlyVoice ? 1.14 : 1.04 }, nativeFinished)) return true;
   if (!('speechSynthesis' in window)) { nativeFinished(); return false; }
+  // Browsers may keep a previous English utterance queued; clear it before a Chinese card speaks.
+  window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = preferredChineseVoice?.lang || 'zh-CN';
   utterance.voice = preferredChineseVoice || chooseChineseVoice();
