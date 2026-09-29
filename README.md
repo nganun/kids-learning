@@ -98,3 +98,89 @@ npm run cap:sync
 ### 安装 GitHub Release 中的 APK
 
 每个 Android 版本会以 `v` 前缀的版本号发布到 GitHub Releases。下载发布页中的 `magic-castle-v<版本号>-debug.apk` 到 Android 设备后，允许浏览器或文件管理器安装未知来源应用即可测试。该 APK 为调试签名版本，仅用于内部测试；正式商店发布应使用单独签名的 release AAB/APK。
+
+### 发布 APK 到 GitHub Release
+
+在发布前，请先确认版本号、网页资源和 Android 工程都已同步，并将版本提交推送到 `main`。下面以 `v1.0.1` 为例：
+
+1. 构建调试 APK：
+
+   ```bash
+   npm run apk:debug
+   ```
+
+2. 确认 APK 已生成：
+
+   ```bash
+   ls -lh android/app/build/outputs/apk/debug/app-debug.apk
+   ```
+
+3. 提交并推送版本改动：
+
+   ```bash
+   git add .
+   git commit -m "feat(android): prepare v1.0.1"
+   git push origin main
+   ```
+
+4. 使用 GitHub CLI 创建 Release 并上传 APK：
+
+   ```bash
+   gh release create v1.0.1 \
+     android/app/build/outputs/apk/debug/app-debug.apk#magic-castle-v1.0.1-debug.apk \
+     --repo nganun/magic-castle \
+     --target main \
+     --title "魔法城堡 v1.0.1" \
+     --notes "Android 调试测试包。"
+   ```
+
+如果版本说明包含反引号、代码块或较长 Markdown，建议先写入文件，再使用 `--notes-file`，避免 Shell 解释 Markdown：
+
+```bash
+cat > /private/tmp/magic-castle-v1.0.1-notes.md <<'EOF_NOTES'
+## Android 测试版
+
+- 本版本使用与 GitHub Pages 相同的网页资源。
+- 附件为 Debug 签名 APK，可直接安装到 Android 设备测试。
+EOF_NOTES
+
+gh release edit v1.0.1 \
+  --repo nganun/magic-castle \
+  --notes-file /private/tmp/magic-castle-v1.0.1-notes.md
+```
+
+可用下面命令验证 Release 与附件是否已发布：
+
+```bash
+gh release view v1.0.1 \
+  --repo nganun/magic-castle \
+  --json tagName,name,assets,url
+```
+
+> 首次使用 GitHub CLI 时，请先执行 `gh auth login -h github.com`。GitHub Release 中的 Debug APK 仅用于测试；发布到应用商店前，请改用独立签名的 release AAB/APK。
+
+### 通过 Git Tag 自动发布 APK
+
+仓库还包含 `Release Magic Castle Android APK` 工作流。推送以 `v` 开头的版本 Tag 时，GitHub Actions 会自动：
+
+1. 安装 Node.js 20、Java 17 与项目依赖；
+2. 构建网页资源并同步到 Capacitor Android 工程；
+3. 构建 Debug APK；
+4. 创建同名 GitHub Release；
+5. 上传 `magic-castle-v<版本号>-debug.apk`。
+
+发布新版本的推荐步骤：
+
+```bash
+# 确认 main 已包含并推送需要发布的代码。
+git checkout main
+git pull origin main
+
+# 用新的语义化版本替换 v1.0.1。
+git tag -a v1.0.1 -m "魔法城堡 v1.0.1"
+git push origin v1.0.1
+```
+
+推送 Tag 后，在 GitHub Actions 查看 `Release Magic Castle Android APK` 工作流。工作流完成后，可在 GitHub Releases 下载 APK。
+
+> Tag 一旦推送即会触发发布，请确认版本号、提交内容和本机测试无误后再推送。
