@@ -6,7 +6,6 @@ import { createStorage } from './features/storage.js';
 import { themeNeedsReview as isThemeReviewDue, recommendedThemeId as getRecommendedThemeId, dailyRouteThemeIds } from './features/map-route.js';
 
 const CHILD_NAME = '荆宝';
-let deferredInstallPrompt = null;
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
@@ -272,7 +271,7 @@ function childName() { return activeProfile()?.name || CHILD_NAME; }
 function dailyFor(profile) { return profile.dailyDate === todayKey ? profile.daily : freshDaily(); }
 const initialProfile = activeProfile();
 const state = {
-  screen: 'home', soundOn: true, childFriendlyVoice: storageGet('luna-child-friendly-voice') !== 'false', recitalMode: 'line', round: 0, completed: false, roundLocked: false,
+  screen: 'home', homeContext: 'lesson', magicHouseTab: 'closet', soundOn: true, recitalMode: 'line', round: 0, completed: false, roundLocked: false,
   activeTheme: initialProfile.activeTheme || 'color', lessonMode: 'learn',
   completedThemes: initialProfile.completedThemes || [], learnedWords: initialProfile.learnedWords || [], wordProgress: initialProfile.wordProgress || {},
   stars: Number(initialProfile.stars || 0), daily: dailyFor(initialProfile),
@@ -356,27 +355,22 @@ function nativeTextToSpeech() {
   return window.Capacitor.Plugins?.MagicTextToSpeech || window.Capacitor.registerPlugin?.('MagicTextToSpeech') || null;
 }
 const requestedTtsLanguageInstall = new Set();
-function speakWithNativeTts(text, options, onend) {
+function speakWithNativeTts(text, options, onend, onUnavailable) {
   const plugin = nativeTextToSpeech();
   if (!plugin) return false;
   const finish = () => onend?.();
+  const fallback = () => onUnavailable?.() || finish();
   const start = () => plugin.speak({ text, volume: 1, category: 'ambient', queueStrategy: 0, ...options })
     .then(finish)
-    .catch(() => {
-      if (options.lang?.startsWith('zh')) {
-        showToast('这台设备还没有可用的中文朗读语音，请安装系统中文语音后再试。');
-        if (!requestedTtsLanguageInstall.has(options.lang)) { requestedTtsLanguageInstall.add(options.lang); plugin.openInstall?.().catch(() => {}); }
-      }
-      finish();
-    });
+    .catch(fallback);
   if (options.lang?.startsWith('zh') && plugin.isLanguageSupported) {
     plugin.isLanguageSupported({ lang: options.lang })
       .then(({ supported }) => {
         if (supported) start();
         else {
-          showToast('这台设备还没有可用的中文朗读语音，请安装系统中文语音后再试。');
-          if (!requestedTtsLanguageInstall.has(options.lang)) { requestedTtsLanguageInstall.add(options.lang); plugin.openInstall?.().catch(() => {}); }
-          finish();
+          showToast('这台设备还没有可用的中文朗读语音，正在尝试使用浏览器语音。');
+          if (!requestedTtsLanguageInstall.has(options.lang)) { requestedTtsLanguageInstall.add(options.lang); plugin.openLanguageInstall?.().catch(() => {}); }
+          fallback();
         }
       })
       .catch(start);
@@ -384,50 +378,54 @@ function speakWithNativeTts(text, options, onend) {
   return true;
 }
 function stopNativeTts() { nativeTextToSpeech()?.stop?.().catch(() => {}); }
+function speakWithBrowserTts(text, { lang, voice, rate, pitch }, onend) {
+  if (!('speechSynthesis' in window)) { onend?.(); return false; }
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang; utterance.voice = voice || null; utterance.rate = rate; utterance.pitch = pitch; utterance.volume = 1;
+  utterance.onend = onend; utterance.onerror = onend;
+  window.speechSynthesis.speak(utterance);
+  return true;
+}
 function speak(text, onend) {
   const run = ++speechRun;
   if (!state.soundOn) { onend?.(); return false; }
-  const nativeFinished = () => { if (run === speechRun) onend?.(); };
-  const nativeRate = clamp((state.childFriendlyVoice ? .80 : .84) * globalSpeechRate, .1, 10);
-  if (speakWithNativeTts(text, { lang: 'en-US', rate: nativeRate, pitch: state.childFriendlyVoice ? 1.12 : 1.05 }, nativeFinished)) return true;
-  if (!('speechSynthesis' in window)) { nativeFinished(); return false; }
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = preferredEnglishVoice?.lang || 'en-US';
-  utterance.voice = preferredEnglishVoice || chooseEnglishVoice();
-  utterance.rate = clamp((state.childFriendlyVoice ? .80 : .84) * globalSpeechRate, .1, 10);
-  utterance.pitch = state.childFriendlyVoice ? 1.12 : 1.05;
-  utterance.volume = 1;
   const finish = () => { if (run === speechRun) onend?.(); };
-  utterance.onend = finish;
-  utterance.onerror = finish;
-  window.speechSynthesis.speak(utterance);
-  return true;
+  const rate = clamp(.84 * globalSpeechRate, .1, 10); const voice = preferredEnglishVoice || chooseEnglishVoice();
+  const browserFallback = () => speakWithBrowserTts(text, { lang: voice?.lang || 'en-US', voice, rate, pitch: 1.05 }, finish);
+  if (speakWithNativeTts(text, { lang: 'en-US', rate, pitch: 1.05 }, finish, browserFallback)) return true;
+  return browserFallback();
 }
 function speakChinese(text, onend) {
   const run = ++speechRun;
   if (!state.soundOn) { onend?.(); return false; }
-  const nativeFinished = () => { if (run === speechRun) onend?.(); };
-  const nativeRate = clamp((state.childFriendlyVoice ? .76 : .82) * globalSpeechRate, .1, 10);
-  if (speakWithNativeTts(text, { lang: 'zh-CN', rate: nativeRate, pitch: state.childFriendlyVoice ? 1.14 : 1.04 }, nativeFinished)) return true;
-  if (!('speechSynthesis' in window)) { nativeFinished(); return false; }
-  // Browsers may keep a previous English utterance queued; clear it before a Chinese card speaks.
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = preferredChineseVoice?.lang || 'zh-CN';
-  utterance.voice = preferredChineseVoice || chooseChineseVoice();
-  utterance.rate = clamp((state.childFriendlyVoice ? .76 : .82) * globalSpeechRate, .1, 10);
-  utterance.pitch = state.childFriendlyVoice ? 1.14 : 1.04;
-  utterance.volume = 1;
   const finish = () => { if (run === speechRun) onend?.(); };
-  utterance.onend = finish;
-  utterance.onerror = finish;
-  window.speechSynthesis.speak(utterance);
-  return true;
+  const rate = clamp(.82 * globalSpeechRate, .1, 10); const voice = preferredChineseVoice || chooseChineseVoice();
+  const browserFallback = () => speakWithBrowserTts(text, { lang: voice?.lang || 'zh-CN', voice, rate, pitch: 1.04 }, finish);
+  if (speakWithNativeTts(text, { lang: 'zh-CN', rate, pitch: 1.04 }, finish, browserFallback)) return true;
+  return browserFallback();
 }
 chooseEnglishVoice();
 chooseChineseVoice();
 if ('speechSynthesis' in window) window.speechSynthesis.addEventListener('voiceschanged', () => { chooseEnglishVoice(); chooseChineseVoice(); });
+let wardrobeMusic = null;
+function stopWardrobeMusic() {
+  if (!wardrobeMusic) return;
+  const { audio } = wardrobeMusic; wardrobeMusic = null;
+  const fade = window.setInterval(() => {
+    audio.volume = Math.max(0, audio.volume - .035);
+    if (audio.volume <= .01) {
+      clearInterval(fade); audio.pause(); audio.currentTime = 0;
+    }
+  }, 35);
+}
+function startWardrobeMusic() {
+  if (wardrobeMusic || !state.soundOn) return;
+  const audio = new Audio('assets/audio/magic-house-background.wav');
+  audio.loop = true; audio.volume = .22;
+  wardrobeMusic = { audio };
+  audio.play().catch(() => { wardrobeMusic = null; });
+}
 function playSuccessChime() {
   if (!state.soundOn || !window.AudioContext && !window.webkitAudioContext) return;
   const Context = window.AudioContext || window.webkitAudioContext;
@@ -450,18 +448,31 @@ function showToast(text) {
   clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove('show'), 2200);
 }
 function routeFor(name) { return name === 'lesson' ? `#lesson/${state.activeTheme}` : `#${name}`; }
+function renderTopbarContext() {
+  const crumb = $('#topbarLessonTitle');
+  const isClosetContext = state.screen === 'closet' || state.screen === 'home' && state.homeContext === 'closet';
+  const label = isClosetContext ? '魔法屋' : currentTheme().title;
+  const isCurrentScreen = state.screen === 'lesson' || state.screen === 'closet';
+  crumb.querySelector('b').textContent = label;
+  crumb.disabled = isCurrentScreen;
+  crumb.setAttribute('aria-label', isCurrentScreen ? `当前位置：${label}` : `继续${label}`);
+}
 function setScreen(name, { push = true } = {}) {
   refreshDailyBoundary();
+  const previousScreen = state.screen;
+  if (name === 'home' && previousScreen === 'closet') state.homeContext = 'closet';
+  else if (name === 'home' && previousScreen === 'lesson') state.homeContext = 'lesson';
   if (state.screen === 'lesson' && name !== 'lesson') finishLessonSession();
   if (name === 'lesson' && !canStartLesson()) { showToast('今天的探险时间已完成，明天再来吧！'); name = 'home'; }
   state.screen = name;
   if (push && location.hash !== routeFor(name)) history.pushState({ screen: name, theme: state.activeTheme }, '', routeFor(name));
-  const lessonCrumb = $('#topbarLessonTitle'); lessonCrumb.querySelector('b').textContent = currentTheme().title;
+  renderTopbarContext();
   $('.app-shell').classList.toggle('home-active', name === 'home');
+  if (name === 'closet') startWardrobeMusic(); else stopWardrobeMusic();
   $$('.screen').forEach((screen) => screen.classList.toggle('active', screen.id === `${name}Screen`));
   $$('.nav-item').forEach((button) => button.classList.toggle('active', button.dataset.screen === name));
   if (name === 'lesson') { lessonSessionStartedAt = Date.now(); renderRound(); }
-  if (name === 'closet') renderWardrobe();
+  if (name === 'closet') { renderWardrobe(); setMagicHouseTab(state.magicHouseTab); }
   $('#main').focus({ preventScroll: true });
 }
 
@@ -683,7 +694,7 @@ function playRecitalLines(lines, card) {
 function renderRound() {
   const theme = currentTheme();
   renderLessonGroupSwitcher();
-  $('#topbarLessonTitle b').textContent = theme.title;
+  renderTopbarContext();
   if (state.completed) return renderCompletion();
   state.roundLocked = false;
   const game = currentRounds()[state.round];
@@ -796,6 +807,22 @@ function renderCompletion() {
   updateProgress();
 }
 
+function renderMagicHouseBook() {
+  const entries = Object.entries(state.wordProgress).filter(([key]) => key.startsWith('hanzi:')).map(([key, item]) => ({ word: key.split(':')[1], item }));
+  const groups = [['已掌握', entries.filter(({ item }) => item.mastered)], ['正在学习', entries.filter(({ item }) => !item.mastered && item.learn)], ['等待复习', entries.filter(({ item }) => item.mastered && item.dueDate <= todayKey)]];
+  $('#magicHouseBookContent').innerHTML = entries.length ? groups.map(([label, words]) => words.length ? `<section><h3>${label}</h3><div>${words.map(({ word }) => `<article><b>${word}</b><span>${label}</span></article>`).join('')}</div></section>` : '').join('') : '<p class="hanzi-book-empty">先去汉字图书塔完成探险吧。</p>';
+}
+function renderMagicHouseAchievements() {
+  $('#magicHouseAchievementContent').innerHTML = ACHIEVEMENT_DEFINITIONS.map(({ id, label }) => `<article class="${state.achievements.includes(id) ? 'earned' : ''}"><b>${state.achievements.includes(id) ? '✦' : '○'}</b><span>${label}</span><small>${state.achievements.includes(id) ? '已获得' : '继续探险解锁'}</small></article>`).join('');
+}
+function setMagicHouseTab(tab) {
+  const next = ['closet', 'book', 'achievements'].includes(tab) ? tab : 'closet'; state.magicHouseTab = next;
+  $$('[data-magic-house-tab]').forEach((button) => { const active = button.dataset.magicHouseTab === next; button.classList.toggle('active', active); button.setAttribute('aria-selected', String(active)); });
+  $$('.magic-house-panel').forEach((panel) => { panel.hidden = panel.id !== `magicHousePanel${next[0].toUpperCase()}${next.slice(1)}`; });
+  if (next === 'closet') renderWardrobe();
+  if (next === 'book') renderMagicHouseBook();
+  if (next === 'achievements') renderMagicHouseAchievements();
+}
 function renderWardrobe() {
   $('#ocAvatar').innerHTML = renderCharacterSVG(state.ocAvatar, 1.45);
   $('#homeOcAvatar').innerHTML = renderCharacterSVG(state.ocAvatar, 1.1);
@@ -852,13 +879,23 @@ function renderSpeechRateControl() {
   input.value = String(globalSpeechRate); input.setAttribute('aria-valuetext', `${speechRateLabel()}，${globalSpeechRate.toFixed(2)} 倍`);
   label.textContent = `${speechRateLabel()} · ${globalSpeechRate.toFixed(2)}×`;
 }
+const DAILY_LIMIT_OPTIONS = [5, 10, 0];
+function dailyLimitLabel(limit) { return limit ? `${limit} 分钟` : '不限时'; }
+function renderDailyLimitControl() {
+  const input = $('#dailyLimitRange'); const label = $('#dailyLimitValue');
+  if (!input || !label) return;
+  const limit = Number(state.study.limitMinutes || 0); const index = Math.max(0, DAILY_LIMIT_OPTIONS.indexOf(limit));
+  input.value = String(index); input.setAttribute('aria-valuetext', dailyLimitLabel(DAILY_LIMIT_OPTIONS[index]));
+  label.textContent = dailyLimitLabel(DAILY_LIMIT_OPTIONS[index]);
+}
 function renderParentProfileControls() {
   const select = $('#profileSelect');
   if (!select) return;
   select.innerHTML = profiles.map((profile) => `<option value="${profile.id}" ${profile.id === activeProfileId ? 'selected' : ''}>${profile.name}</option>`).join('');
   $('#recordingToggle').setAttribute('aria-pressed', String(state.recordingEnabled));
   $('#recordingToggle').textContent = state.recordingEnabled ? '录音跟读：已开启' : '录音跟读：已关闭';
-  $('#dailyLimitSelect').value = String(state.study.limitMinutes || 0); $('#parentStudyToday').textContent = `今天已探险 ${Math.floor(studyTodaySeconds() / 60)} 分钟`; $('#parentAchievements').textContent = state.achievements.length;
+  $('#parentStudyToday').textContent = `今天已探险 ${Math.floor(studyTodaySeconds() / 60)} 分钟`; $('#parentAchievements').textContent = state.achievements.length;
+  renderDailyLimitControl();
   renderSpeechRateControl();
   updateProgress();
 }
@@ -991,26 +1028,24 @@ async function importProgress(file) {
   }
 }
 
-function openHanziBook() { const entries = Object.entries(state.wordProgress).filter(([key]) => key.startsWith('hanzi:')).map(([key, item]) => ({ word: key.split(':')[1], item })); const groups = [['已掌握', entries.filter(({ item }) => item.mastered)], ['正在学习', entries.filter(({ item }) => !item.mastered && item.learn)], ['等待复习', entries.filter(({ item }) => item.mastered && item.dueDate <= todayKey)]]; $('#hanziBookList').innerHTML = entries.length ? groups.map(([label, words]) => words.length ? `<section><h3>${label}</h3><div>${words.map(({ word }) => `<article><b>${word}</b><span>${label}</span></article>`).join('')}</div></section>` : '').join('') : '<p class="hanzi-book-empty">先去汉字图书塔完成探险吧。</p>'; $('#hanziBookModal').classList.add('open'); $('#hanziBookModal').setAttribute('aria-hidden', 'false'); setTimeout(() => $('#closeHanziBook').focus(), 80); }
-function closeHanziBook() { $('#hanziBookModal').classList.remove('open'); $('#hanziBookModal').setAttribute('aria-hidden', 'true'); $('#hanziBookButton').focus(); }
-function openAchievements() { $('#achievementList').innerHTML = ACHIEVEMENT_DEFINITIONS.map(({ id, label }) => `<article class="${state.achievements.includes(id) ? 'earned' : ''}"><b>${state.achievements.includes(id) ? '✦' : '○'}</b><span>${label}</span><small>${state.achievements.includes(id) ? '已获得' : '继续探险解锁'}</small></article>`).join(''); $('#achievementModal').classList.add('open'); $('#achievementModal').setAttribute('aria-hidden', 'false'); setTimeout(() => $('#closeAchievements').focus(), 80); }
-function closeAchievements() { $('#achievementModal').classList.remove('open'); $('#achievementModal').setAttribute('aria-hidden', 'true'); $('#achievementButton').focus(); }
 $$('[data-screen]').forEach((button) => button.addEventListener('click', () => setScreen(button.dataset.screen)));
-$('#topbarLessonTitle').addEventListener('click', () => { if (state.screen !== 'lesson') setScreen('lesson'); });
+$$('[data-magic-house-tab]').forEach((button) => button.addEventListener('click', () => setMagicHouseTab(button.dataset.magicHouseTab)));
+$('#topbarLessonTitle').addEventListener('click', () => { if (state.screen === 'home') setScreen(state.homeContext === 'closet' ? 'closet' : 'lesson'); });
 $$('.mini-speak').forEach((button) => button.addEventListener('click', () => speak(button.dataset.say)));
 $('#playToday').addEventListener('click', () => selectTheme(state.activeTheme, true));
 $('#homePrimaryAction').addEventListener('click', () => selectTheme(state.activeTheme, true));
 $('#magicHouse').addEventListener('click', () => { setScreen('closet'); showToast('欢迎来到魔法屋，给露娜换上新装吧！'); });
-$('#soundToggle').addEventListener('click', () => { state.soundOn = !state.soundOn; $('#soundToggle').setAttribute('aria-pressed', String(state.soundOn)); $('#soundToggle').setAttribute('aria-label', state.soundOn ? '关闭声音' : '打开声音'); $('#soundToggle').classList.toggle('muted', !state.soundOn); if (!state.soundOn) { window.speechSynthesis?.cancel(); stopNativeTts(); } });
+$('#soundToggle').addEventListener('click', () => { state.soundOn = !state.soundOn; $('#soundToggle').setAttribute('aria-pressed', String(state.soundOn)); $('#soundToggle').setAttribute('aria-label', state.soundOn ? '关闭声音' : '打开声音'); $('#soundToggle').classList.toggle('muted', !state.soundOn); if (!state.soundOn) { window.speechSynthesis?.cancel(); stopNativeTts(); stopWardrobeMusic(); } else if (state.screen === 'closet') startWardrobeMusic(); });
 $('#parentButton').addEventListener('click', openParent); $('#closeParent').addEventListener('click', closeParent); $('#disableParentMode').addEventListener('click', disableParentMode);
 $$('[data-parent-tab]').forEach((button) => button.addEventListener('click', () => setParentTab(button.dataset.parentTab)));
 $('#parentGateForm').addEventListener('submit', (event) => { event.preventDefault(); if (Number($('#parentGateAnswer').value) === parentGateAnswer) unlockParent(); else { $('#parentGateError').hidden = false; $('#parentGateAnswer').select(); } });
 $('#profileSelect').addEventListener('change', (event) => switchProfile(event.target.value));
 $('#createProfile').addEventListener('click', () => { const input = $('#newProfileName'); const name = input.value.trim(); if (!name) { input.focus(); return; } const profile = createProfile(name); profiles.push(profile); input.value = ''; switchProfile(profile.id); showToast(`已为 ${profile.name} 建立新的学习档案。`); });
-$('#dailyLimitSelect').addEventListener('change', (event) => { state.study.limitMinutes = Number(event.target.value); persistProgress(); renderParentProfileControls(); showToast(state.study.limitMinutes ? `已设置每日 ${state.study.limitMinutes} 分钟探险时间。` : '已取消每日探险时间限制。'); });
+$('#dailyLimitRange').addEventListener('input', (event) => { const index = Number(event.target.value); state.study.limitMinutes = DAILY_LIMIT_OPTIONS[index]; renderDailyLimitControl(); });
+$('#dailyLimitRange').addEventListener('change', () => { persistProgress(); showToast(state.study.limitMinutes ? `已设置每日 ${state.study.limitMinutes} 分钟探险时间。` : '已取消每日探险时间限制。'); });
 $('#speechRate').addEventListener('input', (event) => { globalSpeechRate = clamp(Number(event.target.value), .5, 1.5); saveText('luna-global-speech-rate', String(globalSpeechRate)); renderSpeechRateControl(); });
 $('#speechRate').addEventListener('change', () => { window.speechSynthesis?.cancel(); showToast(`全局朗读语速已设为${speechRateLabel()}。`); });
-$('#hanziBookButton').addEventListener('click', openHanziBook); $('#closeHanziBook').addEventListener('click', closeHanziBook); $('#achievementButton').addEventListener('click', openAchievements); $('#closeAchievements').addEventListener('click', closeAchievements);
+$('#closeHanziBook').addEventListener('click', closeHanziBook); $('#closeAchievements').addEventListener('click', closeAchievements);
 $('#recordingToggle').addEventListener('click', () => { state.recordingEnabled = !state.recordingEnabled; persistProgress(); renderParentProfileControls(); showToast(state.recordingEnabled ? '已开启录音跟读；录音只留在当前页面。' : '已关闭录音跟读。'); });
 $('#adminButton').addEventListener('click', () => { closeParent(); openAdmin(); });
 $('#closeAdmin').addEventListener('click', closeAdmin);
@@ -1021,35 +1056,6 @@ $('#closeRecitalConfig').addEventListener('click', closeRecitalConfig); $('#addR
 $('#exportProgress').addEventListener('click', exportProgress);
 $('#importProgress').addEventListener('click', () => $('#importProgressFile').click());
 $('#importProgressFile').addEventListener('change', (event) => { importProgress(event.target.files[0]); event.target.value = ''; });
-function isStandaloneApp() {
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-}
-function updateInstallButton() {
-  const button = $('#installApp');
-  if (!button) return;
-  button.hidden = isStandaloneApp();
-  button.textContent = deferredInstallPrompt ? '安装到手机桌面' : '怎样添加到桌面';
-}
-window.addEventListener('beforeinstallprompt', (event) => {
-  event.preventDefault();
-  deferredInstallPrompt = event;
-  updateInstallButton();
-});
-window.addEventListener('appinstalled', () => {
-  deferredInstallPrompt = null;
-  updateInstallButton();
-  showToast('魔法城堡已经安装到桌面啦！');
-});
-$('#installApp').addEventListener('click', async () => {
-  if (!deferredInstallPrompt) {
-    showToast('iPhone/iPad：Safari 点分享，再选“添加到主屏幕”；Android：浏览器菜单中选择“安装应用”。');
-    return;
-  }
-  deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
-  deferredInstallPrompt = null;
-  updateInstallButton();
-});
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js').then((registration) => {
@@ -1063,10 +1069,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     });
   });
 }
-updateInstallButton();
 $('#voiceTest').addEventListener('click', () => { chooseEnglishVoice(); speak(`Hello, ${childName()}! I am Luna. Let us learn English together.`); });
-$('#childVoiceToggle').addEventListener('click', () => { state.childFriendlyVoice = !state.childFriendlyVoice; saveText('luna-child-friendly-voice', String(state.childFriendlyVoice)); $('#childVoiceToggle').setAttribute('aria-pressed', String(state.childFriendlyVoice)); $('#childVoiceToggle').textContent = state.childFriendlyVoice ? '儿童感朗读：已开启' : '儿童感朗读：已关闭'; showToast(state.childFriendlyVoice ? '已使用更慢、更明亮的朗读方式。' : '已使用标准英语朗读方式。'); });
-$('#childVoiceToggle').setAttribute('aria-pressed', String(state.childFriendlyVoice)); $('#childVoiceToggle').textContent = state.childFriendlyVoice ? '儿童感朗读：已开启' : '儿童感朗读：已关闭';
 $('#claimReward').addEventListener('click', () => { closeReward(); $('#newDot').hidden = false; setScreen('closet'); showToast('新的 OC-English 装扮已经放进衣橱！'); });
 $('#dailyWrapHome').addEventListener('click', () => { closeDailyWrapUp(); setScreen('home'); });
 $('#dailyWrapCloset').addEventListener('click', () => { closeDailyWrapUp(); setScreen('closet'); });
@@ -1075,6 +1078,6 @@ $('#resetProgress').addEventListener('click', () => { state.round = 0; state.com
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshDailyBoundary(); });
 window.addEventListener('popstate', () => { const [,screen = 'home', theme] = location.hash.match(/^#([^/]+)\/?(.*)?/) || []; if (theme && THEMES[theme]) state.activeTheme = theme; setScreen(['home','lesson','closet'].includes(screen) ? screen : 'home', { push: false }); });
 document.addEventListener('keydown', handleLessonShortcuts);
-document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('#recitalConfigModal').classList.contains('open')) closeRecitalConfig(); else if (event.key === 'Escape' && $('#contentConfigModal').classList.contains('open')) closeContentConfig(); else if (event.key === 'Escape' && $('#parentModal').classList.contains('open')) closeParent(); else if (event.key === 'Escape' && $('#rewardModal').classList.contains('open')) closeReward(); else if (event.key === 'Escape' && $('#dailyModal').classList.contains('open')) closeDailyWrapUp(); else if (event.key === 'Escape' && $('#adminModal').classList.contains('open')) closeAdmin(); else if (event.key === 'Escape' && $('#hanziBookModal').classList.contains('open')) closeHanziBook(); else if (event.key === 'Escape' && $('#achievementModal').classList.contains('open')) closeAchievements(); });
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('#recitalConfigModal').classList.contains('open')) closeRecitalConfig(); else if (event.key === 'Escape' && $('#contentConfigModal').classList.contains('open')) closeContentConfig(); else if (event.key === 'Escape' && $('#parentModal').classList.contains('open')) closeParent(); else if (event.key === 'Escape' && $('#rewardModal').classList.contains('open')) closeReward(); else if (event.key === 'Escape' && $('#dailyModal').classList.contains('open')) closeDailyWrapUp(); else if (event.key === 'Escape' && $('#adminModal').classList.contains('open')) closeAdmin(); });
 
-$('.app-shell').classList.add('home-active'); $('#topbarLessonTitle b').textContent = currentTheme().title; mountHomeMap(); renderWardrobe(); renderHome(); updateProgress(); renderParentModeState(); renderSpeechRateControl(); renderParentProfileControls(); if (location.hash) window.dispatchEvent(new PopStateEvent('popstate'));
+$('.app-shell').classList.add('home-active'); renderTopbarContext(); mountHomeMap(); renderWardrobe(); renderHome(); updateProgress(); renderParentModeState(); renderSpeechRateControl(); renderParentProfileControls(); if (location.hash) window.dispatchEvent(new PopStateEvent('popstate'));

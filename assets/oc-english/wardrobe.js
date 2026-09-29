@@ -316,9 +316,32 @@ const composeAll = obj => Object.fromEntries(Object.entries(obj).map(([k, v]) =>
 
 export const WARDROBE_ART = { ...HATS, ...GLASSES, ...composeAll(TOPS), ...composeAll(BOTTOMS), ...composeAll(SHOES), ...HELD, ...BACK, ...EARRINGS };
 
-// 商店缩略图：把部件放进完整 200×300 画布便于预览（支持小助手自定义装扮）
+// 商店缩略图：每个部位使用自己的裁切窗口，避免完整 200×300 人物画布导致鞋子偏移、
+// 帽子过小或待解锁图标与已拥有物品的比例不一致。
+const THUMB_VIEWBOX_BY_SLOT = {
+  hat: '28 0 144 105',
+  glasses: '48 68 104 72',
+  top: '32 126 136 102',
+  bottom: '54 174 92 86',
+  shoes: '52 238 96 62',
+  held: '28 112 144 128',
+  back: '26 104 148 132',
+  earring: '72 76 56 70',
+};
+function thumbSlot(itemId) {
+  if (itemId.startsWith('gl_')) return 'glasses';
+  if (itemId.startsWith('hat_')) return 'hat';
+  if (itemId.startsWith('top_')) return 'top';
+  if (itemId.startsWith('bottom_')) return 'bottom';
+  if (itemId.startsWith('shoes_')) return 'shoes';
+  if (itemId.startsWith('held_')) return 'held';
+  if (itemId.startsWith('back_')) return 'back';
+  if (itemId.startsWith('earring_')) return 'earring';
+  return '';
+}
 export function wardrobeThumb(itemId, customArt) {
   const art = WARDROBE_ART[itemId] ?? customArt ?? '';
   if (!art) return '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300" width="72" height="108">${art}</svg>`;
+  const viewBox = THUMB_VIEWBOX_BY_SLOT[thumbSlot(itemId)] || '0 0 200 300';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" width="72" height="72">${art}</svg>`;
 }

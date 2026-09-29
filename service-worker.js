@@ -18,6 +18,7 @@ const APP_SHELL = [
   './assets/maps/magic-castle-adventure-map-mobile.jpeg',
   './assets/ui/expedition-map-button.svg',
   './assets/ui/cloud-label.svg',
+  './assets/audio/magic-house-background.wav',
   './assets/oc-english/character.js',
   './assets/oc-english/wardrobe.js',
   './assets/oc-english/wardrobe-data.js',
