@@ -14,8 +14,12 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.PluginMethod;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,10 +28,25 @@ public class MagicTextToSpeechPlugin extends Plugin {
     private TextToSpeech textToSpeech;
     private boolean initialized = false;
     private final Map<String, PluginCall> pendingCalls = new ConcurrentHashMap<>();
+    private final List<PluginCall> waitingForInitialization = new ArrayList<>();
 
     @Override
     public void load() {
-        textToSpeech = new TextToSpeech(getContext(), status -> initialized = status == TextToSpeech.SUCCESS);
+        textToSpeech = new TextToSpeech(getContext(), status -> {
+            List<PluginCall> waitingCalls;
+            synchronized (this) {
+                initialized = status == TextToSpeech.SUCCESS;
+                waitingCalls = new ArrayList<>(waitingForInitialization);
+                waitingForInitialization.clear();
+            }
+            for (PluginCall call : waitingCalls) {
+                if (initialized) speakNow(call);
+                else {
+                    call.setKeepAlive(false);
+                    call.reject("系统朗读引擎初始化失败。");
+                }
+            }
+        });
         textToSpeech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
             @Override
             public void onStart(String utteranceId) { }
@@ -52,11 +71,10 @@ public class MagicTextToSpeechPlugin extends Plugin {
 
     @PluginMethod
     public void isLanguageSupported(PluginCall call) {
-        String language = call.getString("lang", "");
-        int availability = languageAvailability(language);
         JSObject result = new JSObject();
-        result.put("supported", availability >= TextToSpeech.LANG_AVAILABLE);
-        result.put("missingData", availability == TextToSpeech.LANG_MISSING_DATA);
+        Locale locale = supportedLocale(call.getString("lang", ""));
+        result.put("supported", locale != null);
+        result.put("missingData", locale == null && initialized);
         call.resolve(result);
     }
 
@@ -74,23 +92,51 @@ public class MagicTextToSpeechPlugin extends Plugin {
 
     @PluginMethod
     public void speak(PluginCall call) {
-        if (!initialized || textToSpeech == null) {
+        synchronized (this) {
+            if (!initialized || textToSpeech == null) {
+                call.setKeepAlive(true);
+                waitingForInitialization.add(call);
+                return;
+            }
+        }
+        speakNow(call);
+    }
+
+    @PluginMethod
+    public void stop(PluginCall call) {
+        if (textToSpeech != null) textToSpeech.stop();
+        for (Map.Entry<String, PluginCall> entry : pendingCalls.entrySet()) finishCall(entry.getKey(), null);
+        synchronized (this) {
+            for (PluginCall waitingCall : waitingForInitialization) {
+                waitingCall.setKeepAlive(false);
+                waitingCall.resolve();
+            }
+            waitingForInitialization.clear();
+        }
+        call.resolve();
+    }
+
+    private void speakNow(PluginCall call) {
+        if (textToSpeech == null) {
+            call.setKeepAlive(false);
             call.reject("系统朗读引擎尚未准备好。");
             return;
         }
-
         String language = call.getString("lang", "en-US");
-        int availability = languageAvailability(language);
-        if (availability < TextToSpeech.LANG_AVAILABLE) {
+        Locale locale = supportedLocale(language);
+        if (locale == null) {
+            call.setKeepAlive(false);
             call.reject("当前设备没有可用的 " + language + " 朗读语音。");
             return;
         }
+        if (textToSpeech.setLanguage(locale) < TextToSpeech.LANG_AVAILABLE) {
+            call.setKeepAlive(false);
+            call.reject("当前设备无法启用 " + language + " 朗读语音。");
+            return;
+        }
 
-        Locale locale = Locale.forLanguageTag(language);
-        textToSpeech.setLanguage(locale);
         textToSpeech.setSpeechRate(call.getFloat("rate", 1.0f));
         textToSpeech.setPitch(call.getFloat("pitch", 1.0f));
-
         String utteranceId = UUID.randomUUID().toString();
         Bundle params = new Bundle();
         params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId);
@@ -99,23 +145,27 @@ public class MagicTextToSpeechPlugin extends Plugin {
         call.setKeepAlive(true);
         pendingCalls.put(utteranceId, call);
         int result = textToSpeech.speak(call.getString("text", ""), TextToSpeech.QUEUE_FLUSH, params, utteranceId);
-        if (result == TextToSpeech.ERROR) {
-            finishCall(utteranceId, "系统朗读未能开始。");
-        }
+        if (result == TextToSpeech.ERROR) finishCall(utteranceId, "系统朗读未能开始。");
     }
 
-    @PluginMethod
-    public void stop(PluginCall call) {
-        if (textToSpeech != null) textToSpeech.stop();
-        for (Map.Entry<String, PluginCall> entry : pendingCalls.entrySet()) {
-            finishCall(entry.getKey(), null);
+    private Locale supportedLocale(String language) {
+        if (!initialized || textToSpeech == null) return null;
+        Set<Locale> candidates = new LinkedHashSet<>();
+        if (language != null && !language.isEmpty()) candidates.add(Locale.forLanguageTag(language));
+        if (language != null && language.toLowerCase(Locale.ROOT).startsWith("zh")) {
+            candidates.add(Locale.SIMPLIFIED_CHINESE);
+            candidates.add(Locale.CHINESE);
+            candidates.add(Locale.forLanguageTag("zh-Hans-CN"));
         }
-        call.resolve();
-    }
-
-    private int languageAvailability(String language) {
-        if (!initialized || textToSpeech == null) return TextToSpeech.LANG_NOT_SUPPORTED;
-        return textToSpeech.isLanguageAvailable(Locale.forLanguageTag(language));
+        for (Locale candidate : candidates) {
+            if (textToSpeech.isLanguageAvailable(candidate) >= TextToSpeech.LANG_AVAILABLE) return candidate;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && language != null && language.toLowerCase(Locale.ROOT).startsWith("zh")) {
+            for (Locale candidate : textToSpeech.getAvailableLanguages()) {
+                if ("zh".equalsIgnoreCase(candidate.getLanguage()) && textToSpeech.isLanguageAvailable(candidate) >= TextToSpeech.LANG_AVAILABLE) return candidate;
+            }
+        }
+        return null;
     }
 
     private void finishCall(String utteranceId, String error) {

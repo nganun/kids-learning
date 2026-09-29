@@ -275,22 +275,18 @@ function speakWithNativeTts(text, options, onend, onUnavailable) {
   const fallback = () => onUnavailable?.() || finish();
   const languages = options.langCandidates || [options.lang];
   const baseOptions = { ...options }; delete baseOptions.langCandidates;
-  const start = (lang) => plugin.speak({ text, volume: 1, category: 'ambient', queueStrategy: 0, ...baseOptions, lang })
-    .then(finish)
-    .catch(fallback);
-  if (options.lang?.startsWith('zh') && plugin.isLanguageSupported) {
+  const start = (lang) => plugin.speak({ text, volume: 1, category: 'ambient', queueStrategy: 0, ...baseOptions, lang });
+  if (options.lang?.startsWith('zh')) {
     const tryLanguage = (index) => {
       if (index >= languages.length) {
         showToast('这台设备还没有可用的中文朗读语音，正在尝试使用浏览器语音。');
         if (!requestedTtsLanguageInstall.has(options.lang)) { requestedTtsLanguageInstall.add(options.lang); plugin.openLanguageInstall?.().catch(() => {}); }
         fallback(); return;
       }
-      plugin.isLanguageSupported({ lang: languages[index] })
-        .then(({ supported }) => supported ? start(languages[index]) : tryLanguage(index + 1))
-        .catch(() => start(languages[index]));
+      start(languages[index]).then(finish).catch(() => tryLanguage(index + 1));
     };
     tryLanguage(0);
-  } else start(options.lang);
+  } else start(options.lang).then(finish).catch(fallback);
   return true;
 }
 function stopNativeTts() { nativeTextToSpeech()?.stop?.().catch(() => {}); }
@@ -338,7 +334,7 @@ function stopWardrobeMusic() {
 function startWardrobeMusic() {
   if (wardrobeMusic || !state.soundOn) return;
   const audio = new Audio('assets/audio/magic-house/background-loop.wav');
-  audio.loop = true; audio.volume = .22;
+  audio.loop = true; audio.volume = .11;
   wardrobeMusic = { audio };
   audio.play().catch(() => { wardrobeMusic = null; });
 }
@@ -951,7 +947,9 @@ function renderCompletion() {
 function renderMagicHouseBook() {
   const entries = Object.entries(state.wordProgress).filter(([key]) => key.startsWith('hanzi:')).map(([key, item]) => ({ word: key.split(':')[1], item }));
   const groups = [['已掌握', entries.filter(({ item }) => item.mastered)], ['正在学习', entries.filter(({ item }) => !item.mastered && item.learn)], ['等待复习', entries.filter(({ item }) => item.mastered && item.dueDate <= todayKey)]];
-  $('#magicHouseBookContent').innerHTML = entries.length ? groups.map(([label, words]) => words.length ? `<section><h3>${label}</h3><div>${words.map(({ word }) => `<article><b>${word}</b><span>${label}</span></article>`).join('')}</div></section>` : '').join('') : '<p class="hanzi-book-empty">先去汉字图书塔完成探险吧。</p>';
+  const book = $('#magicHouseBookContent');
+  book.innerHTML = entries.length ? groups.map(([label, words]) => words.length ? `<section><h3>${label}</h3><div>${words.map(({ word }) => `<article><button class="hanzi-book-word" type="button" data-hanzi-book-word="${escapeHtml(word)}" aria-label="朗读 ${escapeHtml(word)}"><b>${escapeHtml(word)}</b><span>${label}</span></button></article>`).join('')}</div></section>` : '').join('') : '<p class="hanzi-book-empty">先去汉字图书塔完成探险吧。</p>';
+  $$('[data-hanzi-book-word]', book).forEach((button) => button.addEventListener('click', () => speakChinese(button.dataset.hanziBookWord)));
 }
 function renderMagicHouseAchievements() {
   $('#magicHouseAchievementContent').innerHTML = ACHIEVEMENT_DEFINITIONS.map(({ id, label, condition }) => `<article class="${state.achievements.includes(id) ? 'earned' : ''}"><b>${state.achievements.includes(id) ? '✦' : '○'}</b><span>${label}</span><small>${state.achievements.includes(id) ? '已获得' : condition}</small></article>`).join('');
