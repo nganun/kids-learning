@@ -1,0 +1,13 @@
+# Node / Capacitor
+node_modules/
+www/
+
+# Android / Gradle output
+android/.gradle/
+android/build/
+android/app/build/
+*.apk
+*.aab
+
+# Local environment
+.DS_Store

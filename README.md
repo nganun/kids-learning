@@ -63,3 +63,38 @@ python3 -m http.server 8000
 - **汉字朗读与录音跟读**：汉字学习卡会自动使用设备的中文语音朗读汉字；家长可开启儿童感语速与语调。录音跟读默认关闭，浏览器仅在当前页面请求麦克风、生成临时回放，不上传也不写入学习记录。
 
 - **管理员入口**：在家长小站打开「管理员设置」。英文与汉字各有独立的分组配置页，可设置分组名称、单词、汉字、词组或成语，并选择当前学习分组。管理员内容仅保存在当前设备浏览器中。
+
+## Android APK（Capacitor）
+
+项目现在同时保留静态网页和 Android 包装层：GitHub Pages 继续发布 `www/` 中构建出的静态站点；Android 使用同一套网页资源同步到 Capacitor WebView 中。
+
+### 本机构建调试 APK
+
+需要 Node.js 20+、Java 17 和 Android SDK。首次安装依赖后运行：
+
+```bash
+npm install
+npm run apk:debug
+```
+
+生成的调试 APK 位于：
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+每次修改网页内容后，可先同步 Android 工程：
+
+```bash
+npm run cap:sync
+```
+
+然后在 Android Studio 中打开 `android/` 目录，或再次运行 `npm run apk:debug`。
+
+### GitHub Actions 构建 APK
+
+仓库包含 `Build Magic Castle Android APK` 工作流。进入 GitHub Actions 后手动运行该工作流，即可在构建结果的 Artifacts 中下载 `magic-castle-debug-apk`。这与 GitHub Pages 的发布工作流相互独立。
+
+### 安装 GitHub Release 中的 APK
+
+每个 Android 版本会以 `v` 前缀的版本号发布到 GitHub Releases。下载发布页中的 `magic-castle-v<版本号>-debug.apk` 到 Android 设备后，允许浏览器或文件管理器安装未知来源应用即可测试。该 APK 为调试签名版本，仅用于内部测试；正式商店发布应使用单独签名的 release AAB/APK。

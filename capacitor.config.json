@@ -1,0 +1,8 @@
+{
+  "appId": "com.magiccastle.app",
+  "appName": "魔法城堡",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

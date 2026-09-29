@@ -27,10 +27,12 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Stamp offline cache version
         run: sed -i "s/__BUILD_ID__/${{ github.sha }}/g" service-worker.js
+      - name: Build static site
+        run: node scripts/build-web.mjs
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
         with:
-          path: .
+          path: ./www
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
