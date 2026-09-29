@@ -16,6 +16,7 @@
   <![endif]-->
 </head>
 <body>
+<button id="gameBack" type="button" aria-label="返回小游戏机">‹ 返回</button>
 <div id="landscapeControl">
   <button id="landscapeHint" type="button" aria-describedby="landscapeStatus">横屏玩更舒服</button>
   <p id="landscapeStatus" role="status" aria-live="polite">旋转设备，画面会更宽。</p>
@@ -60,6 +61,7 @@
   window.addEventListener('load', fitFruitNinja);
   setTimeout(fitFruitNinja, 50);
   var hint = document.getElementById('landscapeHint');
+  var back = document.getElementById('gameBack');
   var status = document.getElementById('landscapeStatus');
   function setLandscapeStatus(message) { status.textContent = message; }
   function isLandscape() { return window.innerWidth > window.innerHeight; }
@@ -87,16 +89,19 @@
       setLandscapeStatus(isLandscape() ? '当前已经是横向画面。' : '请旋转设备；当前浏览器不能自动切换横屏。');
     }
   }
+  function leaveGame() {
+    screen.orientation?.unlock?.();
+    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+    if (window.parent !== window) window.parent.postMessage({ type: 'magic-castle:fruit-exit-request' }, window.location.origin);
+  }
   hint.addEventListener('click', requestLandscape);
+  back.addEventListener('click', leaveGame);
   window.addEventListener('message', function (event) {
     if (event.origin !== window.location.origin) return;
     if (event.data?.type === 'magic-castle:fruit-landscape-result' && event.data.locked) {
       setLandscapeStatus('已切换为横屏模式。');
     }
-    if (event.data?.type === 'magic-castle:fruit-landscape-release') {
-      screen.orientation?.unlock?.();
-      if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
-    }
+    if (event.data?.type === 'magic-castle:fruit-landscape-release') leaveGame();
   });
 }());
 </script>

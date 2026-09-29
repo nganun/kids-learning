@@ -644,10 +644,16 @@ async function lockFruitOrientation(source) {
   source?.postMessage({ type: 'magic-castle:fruit-landscape-result', locked }, location.origin);
 }
 window.addEventListener('message', (event) => {
-  if (event.origin !== location.origin || event.data?.type !== 'magic-castle:fruit-landscape-request') return;
+  if (event.origin !== location.origin) return;
   const fruitFrame = $('[data-fruit-game-frame]');
   if (fruitFrame?.contentWindow !== event.source) return;
-  lockFruitOrientation(event.source);
+  if (event.data?.type === 'magic-castle:fruit-landscape-request') lockFruitOrientation(event.source);
+  if (event.data?.type === 'magic-castle:fruit-exit-request') {
+    releaseFruitOrientation();
+    if (state.screen === 'arcade' && state.arcadeGameId === 'fruit') {
+      state.arcadeGameId = ''; state.arcadeState = null; renderArcade();
+    }
+  }
 });
 function renderVendorMiniGame(area, gameId) {
   const game = VENDOR_MINI_GAMES[gameId];

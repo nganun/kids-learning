@@ -152,8 +152,9 @@ em{
 	color: #fff;
 	font-weight: 700;
 }
+#gameBack{position:fixed;z-index:90;left:12px;top:10px;padding:6px 10px;border:1px solid rgba(255,255,255,.55);border-radius:10px;background:rgba(28,20,45,.72);color:#fff;font-size:12px;cursor:pointer}
 #landscapeControl{position:fixed;z-index:80;right:12px;top:10px;display:grid;justify-items:end;gap:4px;max-width:176px}
 #landscapeHint{padding:6px 9px;border:1px solid rgba(255,255,255,.55);border-radius:10px;background:rgba(57,44,80,.72);color:#fff;font-size:12px;cursor:pointer}
-#landscapeHint:focus-visible{outline:3px solid #fff;outline-offset:2px}
+#gameBack:focus-visible,#landscapeHint:focus-visible{outline:3px solid #fff;outline-offset:2px}
 #landscapeStatus{margin:0;padding:3px 6px;border-radius:7px;background:rgba(28,20,45,.66);color:#fff;font-size:10px;line-height:1.35;text-align:right}
 @media (orientation: landscape){#landscapeControl{display:none}}
