@@ -273,21 +273,24 @@ function speakWithNativeTts(text, options, onend, onUnavailable) {
   if (!plugin) return false;
   const finish = () => onend?.();
   const fallback = () => onUnavailable?.() || finish();
-  const start = () => plugin.speak({ text, volume: 1, category: 'ambient', queueStrategy: 0, ...options })
+  const languages = options.langCandidates || [options.lang];
+  const baseOptions = { ...options }; delete baseOptions.langCandidates;
+  const start = (lang) => plugin.speak({ text, volume: 1, category: 'ambient', queueStrategy: 0, ...baseOptions, lang })
     .then(finish)
     .catch(fallback);
   if (options.lang?.startsWith('zh') && plugin.isLanguageSupported) {
-    plugin.isLanguageSupported({ lang: options.lang })
-      .then(({ supported }) => {
-        if (supported) start();
-        else {
-          showToast('这台设备还没有可用的中文朗读语音，正在尝试使用浏览器语音。');
-          if (!requestedTtsLanguageInstall.has(options.lang)) { requestedTtsLanguageInstall.add(options.lang); plugin.openLanguageInstall?.().catch(() => {}); }
-          fallback();
-        }
-      })
-      .catch(start);
-  } else start();
+    const tryLanguage = (index) => {
+      if (index >= languages.length) {
+        showToast('这台设备还没有可用的中文朗读语音，正在尝试使用浏览器语音。');
+        if (!requestedTtsLanguageInstall.has(options.lang)) { requestedTtsLanguageInstall.add(options.lang); plugin.openLanguageInstall?.().catch(() => {}); }
+        fallback(); return;
+      }
+      plugin.isLanguageSupported({ lang: languages[index] })
+        .then(({ supported }) => supported ? start(languages[index]) : tryLanguage(index + 1))
+        .catch(() => start(languages[index]));
+    };
+    tryLanguage(0);
+  } else start(options.lang);
   return true;
 }
 function stopNativeTts() { nativeTextToSpeech()?.stop?.().catch(() => {}); }
@@ -315,7 +318,7 @@ function speakChinese(text, onend) {
   const finish = () => { if (run === speechRun) onend?.(); };
   const rate = clamp(.82 * globalSpeechRate, .1, 10); const voice = preferredChineseVoice || chooseChineseVoice();
   const browserFallback = () => speakWithBrowserTts(text, { lang: voice?.lang || 'zh-CN', voice, rate, pitch: 1.04 }, finish);
-  if (speakWithNativeTts(text, { lang: 'zh-CN', rate, pitch: 1.04 }, finish, browserFallback)) return true;
+  if (speakWithNativeTts(text, { lang: 'zh-CN', langCandidates: ['zh-CN', 'cmn-CN', 'zh'], rate, pitch: 1.04 }, finish, browserFallback)) return true;
   return browserFallback();
 }
 chooseEnglishVoice();
@@ -373,6 +376,7 @@ function renderTopbarContext() {
   crumb.setAttribute('aria-label', arcadeGameOpen ? '返回小小游戏机大厅' : (isCurrentScreen ? `当前位置：${label}` : `继续${label}`));
 }
 function setScreen(name, { push = true } = {}) {
+  if (name !== 'arcade') releaseFruitOrientation();
   refreshDailyBoundary();
   const previousScreen = state.screen;
   if (name === 'home' && previousScreen === 'closet') state.homeContext = 'closet';
@@ -488,6 +492,7 @@ function completeArcadeGame(name, { rhythmScore = 0, arrowScore = 0 } = {}) {
 }
 function arcadeStatus(items) { return `<div class="arcade-status">${items.map(([label, value, tone = 'violet']) => `<span class="${tone}"><b>${value}</b>${label}</span>`).join('')}</div>`; }
 function renderArcade() {
+  if (state.arcadeGameId !== 'fruit') releaseFruitOrientation();
   renderTopbarContext();
   const area = $('#arcadeArea');
   if (!state.arcadeGameId) {
@@ -617,9 +622,37 @@ const VENDOR_MINI_GAMES = {
   sudoku: { title: '数独', description: '4×4 入门数独填数', src: 'vendor/mini-games/library/sudoku.html' },
   bulls: { title: '猜数字', description: '推理出隐藏的 4 位数字', src: 'vendor/mini-games/library/bulls-and-cows.html' },
 };
+let fruitOrientationLocked = false;
+function nativeScreenOrientation() { return window.Capacitor?.Plugins?.MagicScreenOrientation; }
+async function releaseFruitOrientation() {
+  const fruitFrame = $('[data-fruit-game-frame]');
+  fruitFrame?.contentWindow?.postMessage({ type: 'magic-castle:fruit-landscape-release' }, location.origin);
+  if (!fruitOrientationLocked) return;
+  fruitOrientationLocked = false;
+  try { await nativeScreenOrientation()?.unlock(); } catch { /* The browser may not expose the native bridge. */ }
+}
+async function lockFruitOrientation(source) {
+  let locked = false;
+  try {
+    const plugin = nativeScreenOrientation();
+    if (plugin?.lockLandscape) {
+      await plugin.lockLandscape();
+      fruitOrientationLocked = true;
+      locked = true;
+    }
+  } catch { /* The embedded game retains its browser fullscreen/rotation fallback. */ }
+  source?.postMessage({ type: 'magic-castle:fruit-landscape-result', locked }, location.origin);
+}
+window.addEventListener('message', (event) => {
+  if (event.origin !== location.origin || event.data?.type !== 'magic-castle:fruit-landscape-request') return;
+  const fruitFrame = $('[data-fruit-game-frame]');
+  if (fruitFrame?.contentWindow !== event.source) return;
+  lockFruitOrientation(event.source);
+});
 function renderVendorMiniGame(area, gameId) {
   const game = VENDOR_MINI_GAMES[gameId];
-  area.innerHTML = arcadeFrame(game.title, game.description, `<div class="mini-game-frame vendor-${gameId}"><iframe src="${game.src}" title="${game.title}" loading="eager"></iframe></div>`);
+  const fruitFrameAttributes = gameId === 'fruit' ? ' allow="fullscreen" allowfullscreen data-fruit-game-frame' : '';
+  area.innerHTML = arcadeFrame(game.title, game.description, `<div class="mini-game-frame vendor-${gameId}"><iframe src="${game.src}" title="${game.title}" loading="eager"${fruitFrameAttributes}></iframe></div>`);
   bindArcadeBack();
 }
 function renderFruitGame(area) { renderVendorMiniGame(area, 'fruit'); }
@@ -811,7 +844,7 @@ function renderRound() {
     $('#recordPractice')?.addEventListener('click', recordPractice);
     startLearnCountdown(3);
   } else if (game.type === 'recite') {
-    const wholePiece = state.recitalMode === 'whole'; const piece = activeRecitalGroup(); const recitalText = wholePiece ? piece.lines.join('\n') : game.text; const lineLabel = wholePiece ? `整篇朗诵 · 共 ${group.lines.length} 句` : game.lineLabel || '朗诵文本';
+    const wholePiece = state.recitalMode === 'whole'; const piece = activeRecitalGroup(); const recitalText = wholePiece ? piece.lines.join('\n') : game.text; const lineLabel = wholePiece ? `整篇朗诵 · 共 ${piece.lines.length} 句` : game.lineLabel || '朗诵文本';
     const manuscript = wholePiece
       ? `<span class="recital-manuscript">${piece.lines.map((line, index) => `<span class="recital-line" data-recital-line="${index}">${escapeHtml(line)}</span>`).join('')}</span>`
       : `<span>“${escapeHtml(recitalText)}”</span>`;
