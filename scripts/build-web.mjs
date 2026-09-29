@@ -1,8 +1,10 @@
-import { cp, mkdir, rm } from 'node:fs/promises';
+import { cp, mkdir, rm, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const root = process.cwd();
 const webDir = resolve(root, 'www');
+const defaultContent = JSON.parse(await readFile(resolve(root, 'data/default-learning-content.json'), 'utf8'));
+await writeFile(resolve(root, 'features/default-content.js'), `// Generated from data/default-learning-content.json. Do not edit directly.\nexport const DEFAULT_LEARNING_CONTENT = ${JSON.stringify(defaultContent, null, 2)};\n`);
 const entries = [
   'index.html',
   'app.js',

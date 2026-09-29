@@ -17,14 +17,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="styles/home-map.css" />
+    <link rel="stylesheet" href="styles/screens/adventure-map.css" />
   </head>
   <body>
     <a class="skip-link" href="#main">跳到主要内容</a>
     <div class="app-shell">
       <header class="topbar">
         <div class="brand-context"><button class="brand" type="button" data-screen="home" aria-label="回到魔法城堡首页">
-          <img class="brand-mark" src="assets/brand/magic-castle-logo.svg" alt="" />
+          <img class="brand-mark" src="assets/branding/magic-castle/magic-castle-logo.svg" alt="" />
           <span>魔法城堡</span>
         </button><button class="topbar-lesson-title" id="topbarLessonTitle" type="button" aria-label="继续当前课程"><i aria-hidden="true">›</i><b></b></button></div>
         <div class="top-actions">
@@ -37,40 +37,10 @@
       </header>
 
       <main id="main" tabindex="-1">
-        <section class="screen active" id="homeScreen" aria-labelledby="homeTitle">
+        <section class="screen active" id="homeScreen" aria-label="魔法城堡地图">
           <div class="garden-scene">
-            <span class="star-speck speck-one" aria-hidden="true"></span><span class="star-speck speck-two" aria-hidden="true"></span><span class="star-speck speck-three" aria-hidden="true"></span>
-            <div class="welcome-copy">
-              <p class="greeting">下午好，<span id="childNameGreeting">荆宝</span></p>
-              <h1 id="homeTitle"><span id="homeChildName">荆宝</span>，城堡地图<br />正在等你来点亮。</h1>
-              <p class="helper-text">每完成一次学习，就会有一处新的冒险地点发光。</p>
-              <button class="start-button expedition-image-button" id="homePrimaryAction" type="button" aria-label="出发去探险">
-                <img src="assets/ui/expedition-map-button.svg" alt="" />
-              </button>
-            </div>
-
-            <div class="luna-stage" aria-label="露娜公主站在魔法城堡中">
-              <div class="cloud cloud-a" aria-hidden="true"></div><div class="cloud cloud-b" aria-hidden="true"></div>
-              <div class="castle" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
-              <div class="magic-orb orb-a" aria-hidden="true"></div><div class="magic-orb orb-b" aria-hidden="true"></div>
-              <div class="home-oc-avatar" id="homeOcAvatar" aria-label="露娜角色"></div>
-              <div class="ground" aria-hidden="true"><span></span><span></span><span></span></div>
-              <div class="speech-bubble"><span id="speechChildName">Hi, 荆宝!</span><button type="button" class="mini-speak" data-say="Hi, 荆宝! Let's make magic!" aria-label="播放露娜说的话"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4Zm12.5 2A4.5 4.5 0 0 0 14 8v2a2.5 2.5 0 0 1 0 4v2a4.5 4.5 0 0 0 2.5-4Z"/></svg></button></div>
-            </div>
+            <section class="theme-map" aria-labelledby="themeMapTitle"><div class="theme-map-heading"><div><p class="section-kicker">魔法城堡地图</p><h2 id="themeMapTitle">点亮地图上的一处目的地</h2></div><span>每次探险约 3 分钟</span></div><div class="lesson-mode-switch" id="lessonModeSwitch" role="tablist" aria-label="学习模式"><button class="lesson-mode-button active" type="button" role="tab" aria-selected="true" data-lesson-mode="learn">探索新知识</button><button class="lesson-mode-button" type="button" role="tab" aria-selected="false" data-lesson-mode="review">魔法回顾</button></div><div id="themeCards" class="theme-cards"></div><button id="magicHouse" class="magic-house-cloud" type="button" aria-label="魔法屋，前往魔法屋"><span>魔法屋</span></button><button id="dailyRoute" class="daily-route" type="button" hidden></button></section>
           </div>
-
-          <section class="home-bottom">
-            <article class="daily-card daily-missions">
-              <div class="daily-icon calendar-icon" aria-hidden="true"><span>3</span></div>
-              <div class="daily-copy"><p>今日探险清单</p><strong id="dailyMissionTitle">完成 3 个小目标</strong><ul id="dailyTaskList" class="daily-task-list"></ul></div>
-            </article>
-            <article class="lesson-card">
-              <div class="lesson-card-copy"><p>今天的主题</p><h2 id="todayThemeName">色彩魔法</h2><span id="todayThemeMeta">颜色魔法 · 3 分钟</span></div>
-              <div class="color-vials" aria-hidden="true"><i></i><i></i><i></i></div>
-              <button class="text-button" type="button" id="playToday">去玩 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
-            </article>
-          </section>
-          <section class="theme-map" aria-labelledby="themeMapTitle"><div class="theme-map-heading"><div><p class="section-kicker">魔法城堡地图</p><h2 id="themeMapTitle">点亮地图上的一处目的地</h2></div><span>每次探险约 3 分钟</span></div><div class="lesson-mode-switch" id="lessonModeSwitch" role="tablist" aria-label="学习模式"><button class="lesson-mode-button active" type="button" role="tab" aria-selected="true" data-lesson-mode="learn">探索新知识</button><button class="lesson-mode-button" type="button" role="tab" aria-selected="false" data-lesson-mode="review">魔法回顾</button></div><div id="themeCards" class="theme-cards"></div><button id="magicHouse" class="magic-house-cloud" type="button" aria-label="魔法屋，前往闪闪衣橱"><span>魔法屋</span></button><button id="dailyRoute" class="daily-route" type="button" hidden></button></section>
         </section>
 
         <section class="screen" id="lessonScreen" aria-label="学习课程">
@@ -146,7 +116,7 @@
     </div>
     <div class="modal" id="adminModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="adminTitle"><div class="modal-card parent-modal-card"><button class="modal-close icon-button" id="closeAdmin" type="button" aria-label="关闭管理员设置">×</button><section id="adminContent"><p class="section-kicker">学习内容工作台</p><h2 id="adminTitle">选择要整理的内容</h2><p class="parent-note">英文和汉字分开管理。每个分组都有自己的学习清单；带有“正在学习”标记的分组会显示在城堡地图中。</p><div class="content-config-launchers"><button id="openEnglishConfig" class="content-config-launcher english-config-launcher" type="button"><span class="content-config-icon" aria-hidden="true">A B C</span><span class="content-config-copy"><strong>英文单词</strong><small id="englishConfigMeta">正在读取分组…</small></span><span class="content-config-arrow" aria-hidden="true">›</span></button><button id="openHanziConfig" class="content-config-launcher hanzi-config-launcher" type="button"><span class="content-config-icon" aria-hidden="true">字</span><span class="content-config-copy"><strong>汉字与词组</strong><small id="hanziConfigMeta">正在读取分组…</small></span><span class="content-config-arrow" aria-hidden="true">›</span></button><button id="openRecitalConfig" class="content-config-launcher recital-config-launcher" type="button"><span class="content-config-icon" aria-hidden="true">朗</span><span class="content-config-copy"><strong>朗诵文本</strong><small id="recitalConfigMeta">正在读取篇目…</small></span><span class="content-config-arrow" aria-hidden="true">›</span></button></div></section></div></div>
     <div class="modal" id="contentConfigModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="contentConfigTitle"><div class="modal-card content-config-modal"><button class="modal-close icon-button" id="closeContentConfig" type="button" aria-label="关闭内容配置">×</button><input id="contentConfigType" type="hidden" /><header class="content-config-header"><p class="section-kicker">内容分组</p><h2 id="contentConfigTitle">内容配置</h2><p class="parent-note" id="contentConfigDescription"></p><div class="content-config-summary" id="contentConfigSummary" aria-live="polite"></div></header><section class="content-group-directory" aria-labelledby="contentGroupDirectoryTitle"><div class="content-group-directory-heading"><div><p class="section-kicker">学习分组</p><h3 id="contentGroupDirectoryTitle">选择正在学习的分组</h3></div><button id="addContentGroup" class="secondary-button" type="button">+ 新增分组</button></div><div id="contentGroupList" class="content-group-list"></div></section><section class="content-group-editor" aria-labelledby="contentGroupEditorTitle"><div class="content-group-editor-heading"><div><p class="section-kicker">编辑分组</p><h3 id="contentGroupEditorTitle">分组内容</h3></div><button id="deleteContentGroup" class="text-danger-button" type="button">删除此分组</button></div><label class="admin-field"><span id="contentGroupNameLabel">分组名称</span><input id="contentGroupName" maxlength="16" /></label><label class="admin-field"><span id="contentGroupWordsLabel">学习内容</span><textarea id="contentGroupWords" rows="6"></textarea></label><button id="saveContentGroup" class="primary-button" type="button">保存，并设为正在学习</button></section></div></div>
-    <div class="modal" id="recitalConfigModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="recitalConfigTitle"><div class="modal-card content-config-modal"><button class="modal-close icon-button" id="closeRecitalConfig" type="button" aria-label="关闭朗诵文本配置">×</button><header class="content-config-header"><p class="section-kicker">朗诵小舞台</p><h2 id="recitalConfigTitle">按行整理朗诵文本</h2><p class="parent-note">每一篇是一段完整朗诵。文本框中一行就是一次跟读；孩子会按顺序一行一行地听读、朗诵和完成。</p></header><section class="content-group-directory" aria-labelledby="recitalPieceDirectoryTitle"><div class="content-group-directory-heading"><div><p class="section-kicker">朗诵篇目</p><h3 id="recitalPieceDirectoryTitle">选择正在朗诵的篇目</h3></div><button id="addRecitalPiece" class="secondary-button" type="button">+ 新增篇目</button></div><div id="recitalPieceList" class="content-group-list"></div></section><section class="content-group-editor" aria-labelledby="recitalPieceEditorTitle"><div class="content-group-editor-heading"><div><p class="section-kicker">编辑篇目</p><h3 id="recitalPieceEditorTitle">文本与每一句</h3></div><button id="deleteRecitalPiece" class="text-danger-button" type="button">删除此篇</button></div><label class="admin-field">篇目名称<input id="recitalPieceTitle" maxlength="24" placeholder="例如：春晓" /></label><label class="admin-field">朗诵文本<span class="field-hint">每一行是一句，系统会按行带孩子朗读。</span><textarea id="recitalPieceLines" rows="8" placeholder="春眠不觉晓，&#10;处处闻啼鸟。"></textarea></label><button id="saveRecitalPiece" class="primary-button" type="button">保存，并设为正在朗诵</button></section></div></div>
+    <div class="modal" id="recitalConfigModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="recitalConfigTitle"><div class="modal-card content-config-modal"><button class="modal-close icon-button" id="closeRecitalConfig" type="button" aria-label="关闭朗诵文本配置">×</button><header class="content-config-header"><p class="section-kicker">朗诵小舞台</p><h2 id="recitalConfigTitle">按行整理朗诵文本</h2><p class="parent-note">每一篇是一段完整朗诵。文本框中一行就是一次跟读；孩子会按顺序一行一行地听读、朗诵和完成。</p></header><section class="content-group-directory" aria-labelledby="recitalGroupDirectoryTitle"><div class="content-group-directory-heading"><div><p class="section-kicker">朗诵分组</p><h3 id="recitalGroupDirectoryTitle">选择正在朗诵的分组</h3></div><button id="addRecitalGroup" class="secondary-button" type="button">+ 新增分组</button></div><div id="recitalGroupList" class="content-group-list"></div></section><section class="content-group-editor" aria-labelledby="recitalGroupEditorTitle"><div class="content-group-editor-heading"><div><p class="section-kicker">编辑分组</p><h3 id="recitalGroupEditorTitle">文本与每一句</h3></div><button id="deleteRecitalGroup" class="text-danger-button" type="button">删除此分组</button></div><label class="admin-field">分组名称<input id="recitalGroupTitle" maxlength="24" placeholder="例如：春晓" /></label><label class="admin-field">朗诵文本<span class="field-hint">每一行是一句，系统会按行带孩子朗读。</span><textarea id="recitalGroupLines" rows="8" placeholder="春眠不觉晓，&#10;处处闻啼鸟。"></textarea></label><button id="saveRecitalGroup" class="primary-button" type="button">保存，并设为正在朗诵</button></section></div></div>
     <div class="modal daily-modal" id="dailyModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="dailyTitle">
       <div class="reward-card daily-wrap-card"><p class="section-kicker">今天完成啦</p><h2 id="dailyTitle">魔法任务全完成！</h2><p id="dailyWrapCopy">明天也来和露娜一起学英文吧。</p><div class="daily-streak-badge">连续学习 <b id="dailyWrapStreak">1</b> 天</div><div class="daily-wrap-actions"><button class="secondary-button" id="dailyWrapHome" type="button">回到魔法城堡</button><button class="primary-button" id="dailyWrapCloset" type="button">去衣橱看看</button></div></div>
     </div>

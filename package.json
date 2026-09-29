@@ -7,7 +7,8 @@
     "build:web": "node scripts/build-web.mjs",
     "cap:sync": "npm run build:web && npx cap sync android",
     "android:open": "npm run cap:sync && npx cap open android",
-    "apk:debug": "npm run cap:sync && cd android && ./gradlew assembleDebug"
+    "apk:debug": "npm run cap:sync && cd android && ./gradlew assembleDebug",
+    "content:sync": "node scripts/sync-default-content.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "6.2.1"

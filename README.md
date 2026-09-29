@@ -187,3 +187,7 @@ git push origin v1.0.1
 ### Android 原生朗读与系统界面
 
 Android APK 会优先使用原生 Text-to-Speech 朗读英文、汉字与朗诵文本；若设备没有安装中文朗读语音，App 会提示并尝试打开系统语音数据安装页。Android 状态栏使用浅紫色主题，启动图标复用网页/PWA 的 `assets/icons/app-icon-512.png`。
+
+## 项目结构
+
+项目目录、模块职责、资源命名与构建流程见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。

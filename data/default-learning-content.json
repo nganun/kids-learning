@@ -1,0 +1,77 @@
+{
+  "resourceVersion": 3,
+  "english": {
+    "activeGroupId": "english-colors",
+    "groups": [
+      {
+        "id": "english-colors",
+        "name": "颜色单词",
+        "words": [
+          "red",
+          "green",
+          "black",
+          "white",
+          "blue",
+          "purple",
+          "pink",
+          "yellow"
+        ]
+      }
+    ],
+    "fallbackItems": [
+      "red",
+      "green",
+      "black"
+    ]
+  },
+  "hanzi": {
+    "activeGroupId": "middle-forth-1h",
+    "groups": [
+      {
+        "id": "middle-forth-1h",
+        "name": "中四班-上学期",
+        "words": [
+          "灶台",
+          "面粉",
+          "厨房",
+          "小猫",
+          "胡须",
+          "入口",
+          "兴高采烈",
+          "白色"
+        ]
+      }
+    ],
+    "fallbackItems": [
+      "灶台",
+      "面粉",
+      "厨房",
+      "小猫",
+      "胡须",
+      "入口",
+      "兴高采烈",
+      "白色"
+    ]
+  },
+  "recital": {
+    "activeGroupId": "recital-spring-dawn",
+    "groups": [
+      {
+        "id": "recital-spring-dawn",
+        "lines": [
+          "春眠不觉晓，",
+          "处处闻啼鸟。"
+        ],
+        "name": "春晓"
+      },
+      {
+        "id": "recital-tower",
+        "lines": [
+          "白日依山尽，",
+          "黄河入海流。"
+        ],
+        "name": "登鹳雀楼"
+      }
+    ]
+  }
+}

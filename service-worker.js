@@ -3,37 +3,40 @@ const APP_SHELL = [
   './',
   './index.html',
   './style.css',
-  './styles/home-map.css',
+  './styles/screens/adventure-map.css',
   './app.js',
   './features/map-route.js',
   './features/storage.js',
   './features/achievements.js',
+  './features/theme-catalog.js',
+  './features/content-catalog.js',
+  './features/default-content.js',
   './manifest.webmanifest',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',
   './assets/icons/app-icon.svg',
-  './assets/brand/magic-castle-logo.svg',
-  './assets/maps/castle-adventure-map.svg',
-  './assets/maps/magic-castle-adventure-map.jpeg',
-  './assets/maps/magic-castle-adventure-map-mobile.jpeg',
+  './assets/branding/magic-castle/magic-castle-logo.svg',
+  './assets/scenes/adventure-map/castle-adventure-map.svg',
+  './assets/scenes/adventure-map/magic-castle-adventure-map.jpeg',
+  './assets/scenes/adventure-map/magic-castle-adventure-map-mobile.jpeg',
   './assets/ui/expedition-map-button.svg',
   './assets/ui/cloud-label.svg',
-  './assets/audio/magic-house-background.wav',
-  './assets/oc-english/character.js',
-  './assets/oc-english/wardrobe.js',
-  './assets/oc-english/wardrobe-data.js',
-  './assets/vocabulary/red.svg',
-  './assets/vocabulary/one.svg',
-  './assets/vocabulary/two.svg',
-  './assets/vocabulary/three.svg',
-  './assets/vocabulary/yellow.svg',
-  './assets/vocabulary/blue.svg',
-  './assets/vocabulary/cat.svg',
-  './assets/vocabulary/dog.svg',
-  './assets/vocabulary/rabbit.svg',
-  './assets/vocabulary/jump.svg',
-  './assets/vocabulary/clap.svg',
-  './assets/vocabulary/dance.svg'
+  './assets/audio/magic-house/background-loop.wav',
+  './assets/characters/luna/character.js',
+  './assets/characters/luna/wardrobe.js',
+  './assets/characters/luna/wardrobe-data.js',
+  './assets/learning/vocabulary/red.svg',
+  './assets/learning/vocabulary/one.svg',
+  './assets/learning/vocabulary/two.svg',
+  './assets/learning/vocabulary/three.svg',
+  './assets/learning/vocabulary/yellow.svg',
+  './assets/learning/vocabulary/blue.svg',
+  './assets/learning/vocabulary/cat.svg',
+  './assets/learning/vocabulary/dog.svg',
+  './assets/learning/vocabulary/rabbit.svg',
+  './assets/learning/vocabulary/jump.svg',
+  './assets/learning/vocabulary/clap.svg',
+  './assets/learning/vocabulary/dance.svg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -69,7 +72,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   // CSS and JS use network-first so visual fixes are never held behind an old offline cache.
-  if (url.pathname.endsWith('/style.css') || url.pathname.endsWith('/styles/home-map.css') || url.pathname.endsWith('/app.js')) {
+  if (url.pathname.endsWith('/style.css') || url.pathname.endsWith('/styles/screens/adventure-map.css') || url.pathname.endsWith('/app.js')) {
     event.respondWith(fetch(request).then((response) => {
       if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
       return response;

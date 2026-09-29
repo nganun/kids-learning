@@ -1,9 +1,12 @@
-import { getPartOptions, renderCharacterSVG } from './assets/oc-english/character.js';
-import { wardrobeThumb } from './assets/oc-english/wardrobe.js';
-import { OC_WARDROBE } from './assets/oc-english/wardrobe-data.js';
+import { getPartOptions, renderCharacterSVG } from './assets/characters/luna/character.js';
+import { wardrobeThumb } from './assets/characters/luna/wardrobe.js';
+import { OC_WARDROBE } from './assets/characters/luna/wardrobe-data.js';
 import { ACHIEVEMENT_DEFINITIONS, unlockAchievementIds } from './features/achievements.js';
 import { createStorage } from './features/storage.js';
 import { themeNeedsReview as isThemeReviewDue, recommendedThemeId as getRecommendedThemeId, dailyRouteThemeIds } from './features/map-route.js';
+import { createBuiltInThemes } from './features/theme-catalog.js';
+import { WORD_TRANSLATIONS, HANZI_SCENES, WORD_SENTENCES } from './features/content-catalog.js';
+import { DEFAULT_LEARNING_CONTENT } from './features/default-content.js';
 
 const CHILD_NAME = '荆宝';
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -13,119 +16,55 @@ const { getText: storageGet, load, save, saveText } = createStorage(() => showTo
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 let globalSpeechRate = clamp(Number(storageGet('luna-global-speech-rate') || 1), .5, 1.5);
 
-let THEMES = {
-  color: { id: 'color', title: '色彩魔法', subtitle: '颜色魔法', words: ['red', 'yellow', 'blue'], rewards: ['hat_crown', 'top_dress', 'bottom_tutu', 'shoes_glass', 'back_wings'],
-    rounds: [
-      { type: 'learn', chip: '认识单词', word: 'red', image: 'assets/vocabulary/red.svg', zh: '看一看，这是 red。' },
-      { type: 'learn', chip: '认识单词', word: 'yellow', image: 'assets/vocabulary/yellow.svg', zh: '看一看，这是 yellow。' },
-      { type: 'learn', chip: '认识单词', word: 'blue', image: 'assets/vocabulary/blue.svg', zh: '看一看，这是 blue。' },
-    ],
-    reviewRounds: [
-      { type: 'match', chip: '魔法复习', prompt: 'Which word matches?', word: 'red', image: 'assets/vocabulary/red.svg', zh: '看图片，选出对应的英文单词。', choices: ['red', 'blue'], correct: 'red' },
-      { type: 'listen', chip: '听音找一找', prompt: 'Find yellow!', word: 'yellow', image: 'assets/vocabulary/yellow.svg', zh: '听一听，找到对应的图片。', choices: ['yellow', 'red'], correct: 'yellow' },
-      { type: 'match', chip: '魔法复习', prompt: 'Which word matches?', word: 'blue', image: 'assets/vocabulary/blue.svg', zh: '看图片，选出对应的英文单词。', choices: ['yellow', 'blue'], correct: 'blue' },
-    ],
-  },
-  animal: { id: 'animal', title: '动物花园', subtitle: '动物花园', words: ['cat', 'dog', 'rabbit'], rewards: ['hat_straw', 'held_bear', 'back_butterfly', 'shoes_sandal'],
-    rounds: [
-      { type: 'learn', chip: '认识单词', word: 'cat', image: 'assets/vocabulary/cat.svg', zh: '看一看，这是 cat。' },
-      { type: 'learn', chip: '认识单词', word: 'dog', image: 'assets/vocabulary/dog.svg', zh: '看一看，这是 dog。' },
-      { type: 'learn', chip: '认识单词', word: 'rabbit', image: 'assets/vocabulary/rabbit.svg', zh: '看一看，这是 rabbit。' },
-    ],
-    reviewRounds: [
-      { type: 'match', chip: '魔法复习', prompt: 'Which word matches?', word: 'cat', image: 'assets/vocabulary/cat.svg', zh: '看图片，选出对应的英文单词。', choices: ['cat', 'dog'], correct: 'cat' },
-      { type: 'listen', chip: '听音找一找', prompt: 'Find dog!', word: 'dog', image: 'assets/vocabulary/dog.svg', zh: '听一听，找到对应的图片。', choices: ['rabbit', 'dog'], correct: 'dog' },
-      { type: 'match', chip: '魔法复习', prompt: 'Which word matches?', word: 'rabbit', image: 'assets/vocabulary/rabbit.svg', zh: '看图片，选出对应的英文单词。', choices: ['cat', 'rabbit'], correct: 'rabbit' },
-    ],
-  },
-  action: { id: 'action', title: '朗诵小舞台', subtitle: '朗诵小舞台', words: ['春晓', '登鹳雀楼', '静夜思'], rewards: ['hat_cap', 'top_sport', 'bottom_shorts', 'shoes_sport', 'held_balloon'],
-    rounds: [
-      { type: 'recite', chip: '跟读朗诵', word: '春晓', text: '春眠不觉晓，处处闻啼鸟。', zh: '先听一听，再把这一句朗读出来。' },
-      { type: 'recite', chip: '跟读朗诵', word: '登鹳雀楼', text: '白日依山尽，黄河入海流。', zh: '读得慢一点，让每个字都清楚。' },
-      { type: 'recite', chip: '跟读朗诵', word: '静夜思', text: '床前明月光，疑是地上霜。', zh: '试着用好听的声音完整读一遍。' },
-    ],
-    reviewRounds: [
-      { type: 'recite', chip: '朗诵回顾', word: '春晓', text: '春眠不觉晓，处处闻啼鸟。', zh: '再读一次，听听自己的节奏。' },
-      { type: 'recite', chip: '朗诵回顾', word: '登鹳雀楼', text: '白日依山尽，黄河入海流。', zh: '再读一次，注意停顿。' },
-      { type: 'recite', chip: '朗诵回顾', word: '静夜思', text: '床前明月光，疑是地上霜。', zh: '再读一次，把句子读完整。' },
-    ],
-  },
-  number: { id: 'number', title: '数字魔法', subtitle: '数字魔法', words: ['one', 'two', 'three'], rewards: ['hat_wizard', 'gl_star', 'top_sailor', 'held_book'],
-    rounds: [
-      { type: 'learn', chip: '认识数字', word: 'one', image: 'assets/vocabulary/one.svg', zh: '看一看，这是 one，一颗星星。' },
-      { type: 'learn', chip: '认识数字', word: 'two', image: 'assets/vocabulary/two.svg', zh: '看一看，这是 two，两朵花。' },
-      { type: 'learn', chip: '认识数字', word: 'three', image: 'assets/vocabulary/three.svg', zh: '看一看，这是 three，三个气球。' },
-    ],
-    reviewRounds: [
-      { type: 'match', chip: '魔法复习', prompt: 'Which word matches?', word: 'one', image: 'assets/vocabulary/one.svg', zh: '看数量，选出对应的英文单词。', choices: ['one', 'two'], correct: 'one' },
-      { type: 'listen', chip: '听音找一找', prompt: 'Find two!', word: 'two', image: 'assets/vocabulary/two.svg', zh: '听一听，找到对应的数量图片。', choices: ['one', 'two'], correct: 'two' },
-      { type: 'match', chip: '魔法复习', prompt: 'Which word matches?', word: 'three', image: 'assets/vocabulary/three.svg', zh: '看数量，选出对应的英文单词。', choices: ['two', 'three'], correct: 'three' },
-      { type: 'action', chip: '数字动作', prompt: 'Clap three times!', word: 'three', image: 'assets/vocabulary/clap.svg', zh: '跟着露娜拍三下手，完成后点“我做完啦”。', actionLabel: '我做完啦' },
-    ],
-  },
-};
+let THEMES = createBuiltInThemes();
 
-const ADMIN_DEFAULT = {
-  pin: '2468',
-  // Default resource set derived from luna-learning-2026-09-29.json.
-  english: ['red', 'green'],
-  hanzi: ['人', '灶', '灶台', '面粉', '厨房', '小猫', '胡须', '入口', '兴高采烈', '白色'],
-  englishGroups: [{ id: 'english-colors', name: '颜色单词', words: ['red', 'green'] }],
-  hanziGroups: [
-    { id: 'hanzi-kitchen', name: '厨房词汇', words: ['人', '灶', '灶台', '面粉', '厨房'] },
-    { id: 'hanzi-life', name: '生活词语', words: ['小猫', '胡须', '入口', '兴高采烈', '白色'] },
-  ],
-  activeEnglishGroupId: 'english-colors',
-  activeHanziGroupId: 'hanzi-kitchen',
-  recitalPieces: [
-    { id: 'recital-spring-dawn', title: '春晓', lines: ['春眠不觉晓，', '处处闻啼鸟。'] },
-    { id: 'recital-tower', title: '登鹳雀楼', lines: ['白日依山尽，', '黄河入海流。'] },
-  ],
-  activeRecitalPieceId: 'recital-spring-dawn',
-};
-const adminContent = load('luna-admin-content-v1', ADMIN_DEFAULT);
+const ADMIN_DEFAULT = DEFAULT_LEARNING_CONTENT;
+const ADMIN_CONTENT_STORAGE_KEY = 'luna-admin-content-v4';
+const adminContent = load(ADMIN_CONTENT_STORAGE_KEY, JSON.parse(JSON.stringify(ADMIN_DEFAULT)));
 function safeEnglishWords(value) { return String(value).split(/[，,；;\n]/).map((word) => word.trim().toLowerCase()).filter((word) => /^[a-z]{1,16}$/.test(word)).slice(0, 24); }
 function safeHanzi(value) { return String(value).split(/[，,；;\n]/).map((term) => term.trim()).filter((term) => /^[\p{Script=Han}]{1,8}$/u.test(term)).slice(0, 24); }
-function contentGroupKey(kind) { return `${kind}Groups`; }
-function activeContentGroupKey(kind) { return `active${kind[0].toUpperCase()}${kind.slice(1)}GroupId`; }
-function defaultContentWords(kind) { return kind === 'hanzi' ? ADMIN_DEFAULT.hanzi : ADMIN_DEFAULT.english; }
+function subjectConfig(kind) { return adminContent[kind]; }
+function defaultContentWords(kind) { return subjectConfig(kind).fallbackItems; }
 function normaliseContentWords(kind, words) { return kind === 'hanzi' ? safeHanzi(Array.isArray(words) ? words.join('，') : words) : safeEnglishWords(Array.isArray(words) ? words.join(',') : words); }
 const editingContentGroupIds = { english: null, hanzi: null };
 function contentGroups(kind) {
-  const key = contentGroupKey(kind);
-  const existing = Array.isArray(adminContent[key]) ? adminContent[key]
+  const subject = subjectConfig(kind);
+  const existing = Array.isArray(subject.groups) ? subject.groups
     .map((group, index) => ({ id: String(group?.id || `${kind}-${index + 1}`), name: typeof group?.name === 'string' ? group.name.trim().slice(0, 16) : `${kind === 'hanzi' ? '汉字' : '英文'}分组 ${index + 1}`, words: normaliseContentWords(kind, group?.words) })) : [];
-  if (existing.length) { adminContent[key] = existing; return existing; }
-  const legacy = normaliseContentWords(kind, adminContent[kind]);
-  const fallback = legacy.length >= 2 ? legacy : defaultContentWords(kind);
+  if (existing.length) { subject.groups = existing; return existing; }
+  const fallback = normaliseContentWords(kind, subject.fallbackItems);
   const initial = { id: `${kind}-basics`, name: kind === 'hanzi' ? '汉字启蒙' : '基础单词', words: fallback };
-  adminContent[key] = [initial];
-  return adminContent[key];
+  subject.groups = [initial]; subject.activeGroupId = initial.id;
+  return subject.groups;
 }
 function activeContentGroup(kind) {
-  const groups = contentGroups(kind); const key = activeContentGroupKey(kind);
+  const subject = subjectConfig(kind); const groups = contentGroups(kind);
   const valid = (group) => group.name && group.words.length >= 2;
-  const active = groups.find((group) => group.id === adminContent[key] && valid(group)) || groups.find(valid) || groups[0];
-  adminContent[key] = active.id;
+  const active = groups.find((group) => group.id === subject.activeGroupId && valid(group)) || groups.find(valid) || groups[0];
+  subject.activeGroupId = active.id;
   return active;
 }
+function setActiveContentGroup(kind, groupId) { subjectConfig(kind).activeGroupId = groupId; }
 function editingContentGroup(kind) {
   const groups = contentGroups(kind); const editing = groups.find((group) => group.id === editingContentGroupIds[kind]);
   return editing || activeContentGroup(kind);
 }
-function saveContentConfiguration() { save('luna-admin-content-v1', adminContent); }
+function saveContentConfiguration() { save(ADMIN_CONTENT_STORAGE_KEY, adminContent); }
 function normaliseRecitalLines(value) { return String(Array.isArray(value) ? value.join('\n') : value).split(/\n+/).map((line) => line.trim()).filter(Boolean).slice(0, 24); }
-function recitalPieces() {
-  const pieces = Array.isArray(adminContent.recitalPieces) ? adminContent.recitalPieces.map((piece, index) => ({ id: String(piece?.id || `recital-${index + 1}`), title: String(piece?.title || `朗诵第 ${index + 1} 篇`).trim().slice(0, 24), lines: normaliseRecitalLines(piece?.lines) })).filter((piece) => piece.title) : [];
-  if (pieces.length) { adminContent.recitalPieces = pieces; return pieces; }
-  adminContent.recitalPieces = ADMIN_DEFAULT.recitalPieces.map((piece) => ({ ...piece, lines: [...piece.lines] }));
-  return adminContent.recitalPieces;
+function recitalGroups() {
+  const subject = subjectConfig('recital');
+  const groups = Array.isArray(subject.groups) ? subject.groups.map((group, index) => ({ id: String(group?.id || `recital-${index + 1}`), name: String(group?.name || `朗诵第 ${index + 1} 组`).trim().slice(0, 24), lines: normaliseRecitalLines(group?.lines) })).filter((group) => group.name) : [];
+  if (groups.length) { subject.groups = groups; return groups; }
+  subject.groups = ADMIN_DEFAULT.recital.groups.map((group) => ({ ...group, lines: [...group.lines] }));
+  subject.activeGroupId = ADMIN_DEFAULT.recital.activeGroupId;
+  return subject.groups;
 }
-function activeRecitalPiece() { const pieces = recitalPieces(); const active = pieces.find((piece) => piece.id === adminContent.activeRecitalPieceId) || pieces[0]; adminContent.activeRecitalPieceId = active.id; return active; }
+function activeRecitalGroup() { const subject = subjectConfig('recital'); const groups = recitalGroups(); const active = groups.find((group) => group.id === subject.activeGroupId) || groups[0]; subject.activeGroupId = active.id; return active; }
+function setActiveRecitalGroup(groupId) { subjectConfig('recital').activeGroupId = groupId; }
 function buildRecitalTheme() {
-  const piece = activeRecitalPiece(); const rounds = piece.lines.map((text, index) => ({ type: 'recite', chip: '逐行朗诵', word: `${piece.id}-${index + 1}`, title: piece.title, lineLabel: `第 ${index + 1} 句`, text, zh: '先听一听，再清楚地朗读这一句。' }));
-  const reviewRounds = piece.lines.map((text, index) => ({ type: 'recite', chip: '逐行回顾', word: `${piece.id}-${index + 1}`, title: piece.title, lineLabel: `第 ${index + 1} 句`, text, zh: '再读一次，注意语速和停顿。' }));
-  return { id: 'action', title: '朗诵小舞台', subtitle: piece.title, words: rounds.map((round) => round.word), rewards: ['hat_cap', 'top_sport', 'bottom_shorts', 'shoes_sport', 'held_balloon'], rounds, reviewRounds };
+  const group = activeRecitalGroup(); const rounds = group.lines.map((text, index) => ({ type: 'recite', chip: '逐行朗诵', word: `${group.id}-${index + 1}`, title: group.name, lineLabel: `第 ${index + 1} 句`, text, zh: '先听一听，再清楚地朗读这一句。' }));
+  const reviewRounds = group.lines.map((text, index) => ({ type: 'recite', chip: '逐行回顾', word: `${group.id}-${index + 1}`, title: group.name, lineLabel: `第 ${index + 1} 句`, text, zh: '再读一次，注意语速和停顿。' }));
+  return { id: 'action', title: '朗诵小舞台', subtitle: group.name, words: rounds.map((round) => round.word), rewards: ['hat_cap', 'top_sport', 'bottom_shorts', 'shoes_sport', 'held_balloon'], rounds, reviewRounds };
 }
 function textCard(text, fill = '#f1e8ff') { return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180"><rect width="240" height="180" rx="28" fill="${fill}"/><text x="120" y="108" text-anchor="middle" font-family="sans-serif" font-size="${text.length > 5 ? 42 : 72}" font-weight="800" fill="#6744a5">${text}</text></svg>`)}`; }
 function buildCustomTheme(id, title, subtitle, words, isHanzi = false) {
@@ -135,20 +74,6 @@ function buildCustomTheme(id, title, subtitle, words, isHanzi = false) {
   const reviewRounds = list.map((word, index) => { const other = list[(index + 1) % list.length]; return { type: index % 2 ? 'listen' : 'match', chip: index % 2 ? '听音找一找' : '魔法复习', prompt: isHanzi ? `Find ${word}` : 'Which word matches?', word, image: isHanzi ? textCard(word, '#fff0dc') : wordImage(word) || textCard(word), zh: isHanzi ? '听一听，找到对应的汉字或词组。' : '看图片，选出对应的英文单词。', choices: [word, other], correct: word }; });
   return { id, title, subtitle, words: list, rewards: ['hat_wizard', 'gl_star', 'held_book'], rounds, reviewRounds };
 }
-function installBundledLearningResources() {
-  const version = Number(adminContent.bundledResourceVersion || 0);
-  if (version >= 2) return;
-  const appendMissingGroups = (kind, defaults) => {
-    const key = contentGroupKey(kind);
-    const existing = Array.isArray(adminContent[key]) ? adminContent[key] : [];
-    defaults.forEach((group) => { if (!existing.some((item) => item?.id === group.id)) existing.push({ ...group, words: [...group.words] }); });
-    adminContent[key] = existing;
-  };
-  appendMissingGroups('english', ADMIN_DEFAULT.englishGroups);
-  appendMissingGroups('hanzi', ADMIN_DEFAULT.hanziGroups);
-  adminContent.bundledResourceVersion = 2;
-  save('luna-admin-content-v1', adminContent);
-}
 function applyAdminContent() {
   const english = activeContentGroup('english'); const hanzi = activeContentGroup('hanzi');
   THEMES.english = buildCustomTheme('english', '英文单词', english.name, english.words);
@@ -157,22 +82,7 @@ function applyAdminContent() {
 }
 
 
-const WORD_TRANSLATIONS = {
-  red: '红色', green: '绿色', yellow: '黄色', blue: '蓝色',
-  cat: '小猫', dog: '小狗', rabbit: '小兔子',
-  jump: '跳一跳', clap: '拍拍手', dance: '跳舞',
-  one: '一', two: '二', three: '三',
-};
-const HANZI_SCENES = {
-  '大人': { label: '大人牵着小朋友', art: 'adult' }, '人口': { label: '小镇里的许多人', art: 'people' }, '小猫': { label: '花圃旁的小猫', art: 'cat' }, '太阳': { label: '天空中的太阳', art: 'sun' },
-};
 function hanziSceneMarkup(word) { const scene = HANZI_SCENES[word]; return scene ? `<div class="hanzi-scene scene-${scene.art}" aria-label="${scene.label}"><i></i><i></i><i></i><span>${scene.label}</span></div>` : ''; }
-const WORD_SENTENCES = {
-  red: { text: 'It is red.', zh: '它是红色的。' }, yellow: { text: 'It is yellow.', zh: '它是黄色的。' }, blue: { text: 'It is blue.', zh: '它是蓝色的。' },
-  cat: { text: 'A little cat.', zh: '一只小猫。' }, dog: { text: 'A happy dog.', zh: '一只开心的小狗。' }, rabbit: { text: 'A little rabbit.', zh: '一只小兔子。' },
-  jump: { text: 'I can jump!', zh: '我会跳！' }, clap: { text: 'Clap your hands!', zh: '拍拍手！' }, dance: { text: 'Let us dance!', zh: '我们一起跳舞！' },
-  one: { text: 'One star.', zh: '一颗星星。' }, two: { text: 'Two flowers.', zh: '两朵花。' }, three: { text: 'Three balloons.', zh: '三个气球。' },
-};
 function wordImage(word) {
   return Object.values(THEMES).flatMap((theme) => theme.rounds).find((round) => round.word === word)?.image || '';
 }
@@ -195,7 +105,6 @@ function mapIcon(type) {
   };
   return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[type] || paths.spark}</svg>`;
 }
-installBundledLearningResources();
 applyAdminContent();
 
 const OC_CATEGORY_META = [
@@ -421,7 +330,7 @@ function stopWardrobeMusic() {
 }
 function startWardrobeMusic() {
   if (wardrobeMusic || !state.soundOn) return;
-  const audio = new Audio('assets/audio/magic-house-background.wav');
+  const audio = new Audio('assets/audio/magic-house/background-loop.wav');
   audio.loop = true; audio.volume = .22;
   wardrobeMusic = { audio };
   audio.play().catch(() => { wardrobeMusic = null; });
@@ -523,17 +432,6 @@ function themeNeedsReview(theme) { return isThemeReviewDue(theme, state.wordProg
 function recommendedThemeId() { return getRecommendedThemeId(THEMES, state.completedThemes, state.wordProgress, todayKey, state.activeTheme); }
 function dailyRouteThemes() { return dailyRouteThemeIds(THEMES, state.completedThemes, state.wordProgress, todayKey); }
 function renderHome() {
-  const theme = currentTheme();
-  $('#childNameGreeting').textContent = childName();
-  $('#homeChildName').textContent = childName();
-  $('#speechChildName').textContent = `Hi, ${childName()}!`;
-  $('.mini-speak').dataset.say = `Hi, ${childName()}! Let's make magic!`;
-  $('#todayThemeName').textContent = theme.title;
-  $('#homePrimaryAction').setAttribute('aria-label', state.lessonMode === 'review' ? '继续探险复习' : '出发去探险');
-  $('#todayThemeMeta').textContent = `${theme.subtitle} · 3 分钟 · ${theme.words.join(' / ')}`;
-  $('#dailyMissionTitle').textContent = state.daily.claimed ? '今天的礼物已收到！' : '完成 3 个小目标';
-  const tasks = [ ['round', '完成 1 个魔法小游戏'], ['theme', '完成 1 个魔法主题'], ['dress', '在衣橱换 1 件装扮'] ];
-  $('#dailyTaskList').innerHTML = tasks.map(([id, label]) => `<li class="${state.daily[id] ? 'done' : ''}"><span>${state.daily[id] ? '✓' : '○'}</span>${label}</li>`).join('');
   const recommended = recommendedThemeId();
   const route = dailyRouteThemes();
   const routeButton = $('#dailyRoute');
@@ -646,7 +544,7 @@ function renderLessonGroupSwitcher() {
   container.innerHTML = `<span>${kind === 'hanzi' ? '汉字分组' : '英文分组'}</span><div role="tablist" aria-label="${kind === 'hanzi' ? '汉字' : '英文'}学习分组">${groups.map((group) => `<button type="button" role="tab" data-lesson-group="${escapeHtml(group.id)}" aria-selected="${group.id === active.id}" class="${group.id === active.id ? 'active' : ''}">${escapeHtml(group.name)}</button>`).join('')}</div>`;
   $$('[data-lesson-group]', container).forEach((button) => button.addEventListener('click', () => {
     const group = groups.find((item) => item.id === button.dataset.lessonGroup); if (!group || group.id === active.id) return;
-    adminContent[activeContentGroupKey(kind)] = group.id; saveContentConfiguration(); applyAdminContent();
+    setActiveContentGroup(kind, group.id); saveContentConfiguration(); applyAdminContent();
     state.round = 0; state.completed = false; state.roundLocked = false; persistProgress(); renderHome(); renderRound(); showToast(`开始学习“${group.name}”分组。`);
   }));
 }
@@ -709,7 +607,7 @@ function renderRound() {
     $('#recordPractice')?.addEventListener('click', recordPractice);
     startLearnCountdown(3);
   } else if (game.type === 'recite') {
-    const wholePiece = state.recitalMode === 'whole'; const piece = activeRecitalPiece(); const recitalText = wholePiece ? piece.lines.join('\n') : game.text; const lineLabel = wholePiece ? `整篇朗诵 · 共 ${piece.lines.length} 句` : game.lineLabel || '朗诵文本';
+    const wholePiece = state.recitalMode === 'whole'; const piece = activeRecitalGroup(); const recitalText = wholePiece ? piece.lines.join('\n') : game.text; const lineLabel = wholePiece ? `整篇朗诵 · 共 ${group.lines.length} 句` : game.lineLabel || '朗诵文本';
     const manuscript = wholePiece
       ? `<span class="recital-manuscript">${piece.lines.map((line, index) => `<span class="recital-line" data-recital-line="${index}">${escapeHtml(line)}</span>`).join('')}</span>`
       : `<span>“${escapeHtml(recitalText)}”</span>`;
@@ -825,7 +723,6 @@ function setMagicHouseTab(tab) {
 }
 function renderWardrobe() {
   $('#ocAvatar').innerHTML = renderCharacterSVG(state.ocAvatar, 1.45);
-  $('#homeOcAvatar').innerHTML = renderCharacterSVG(state.ocAvatar, 1.1);
   $('#ocCollectionCount').textContent = `${state.ocOwned.length + 1} / ${OC_WARDROBE.length + OC_PART_OPTIONS.hair.length}`;
   const category = OC_CATEGORY_META.find((item) => item.id === state.ocTab);
   $('#ocLookName').textContent = '点一点右边的装扮，给露娜换新造型。';
@@ -934,7 +831,7 @@ function renderAdminContentSummary() {
     const group = activeContentGroup(kind); const groups = contentGroups(kind);
     $(`#${kind}ConfigMeta`).textContent = `正在学习：${group.name} · ${groups.length} 个分组 · ${group.words.length} 项`;
   });
-  const recital = activeRecitalPiece(); $('#recitalConfigMeta').textContent = `正在朗诵：《${recital.title}》· ${recital.lines.length} 句`;
+  const recital = activeRecitalGroup(); $('#recitalConfigMeta').textContent = `正在朗诵：《${recital.name}》· ${recital.lines.length} 句`;
 }
 function openAdmin() { $('#adminModal').classList.add('open'); $('#adminModal').setAttribute('aria-hidden', 'false'); $('#adminContent').hidden = false; renderAdminContentSummary(); setTimeout(() => $('#openEnglishConfig').focus(), 100); }
 function closeAdmin() { $('#adminModal').classList.remove('open'); $('#adminModal').setAttribute('aria-hidden', 'true'); $('#parentButton').focus(); }
@@ -966,7 +863,7 @@ function saveSelectedContentGroup() {
   const kind = $('#contentConfigType').value; const group = selectedContentGroup(kind); const name = $('#contentGroupName').value.trim().slice(0, 16); const words = normaliseContentWords(kind, $('#contentGroupWords').value);
   if (!name) { showToast('请为分组取一个名称。'); $('#contentGroupName').focus(); return; }
   if (words.length < 2) { showToast(`${kind === 'hanzi' ? '汉字' : '英文'}分组至少填写 2 项。`); $('#contentGroupWords').focus(); return; }
-  group.name = name; group.words = words; adminContent[activeContentGroupKey(kind)] = group.id; editingContentGroupIds[kind] = group.id; saveContentConfiguration(); applyAdminContent(); renderAdminContentSummary();
+  group.name = name; group.words = words; setActiveContentGroup(kind, group.id); editingContentGroupIds[kind] = group.id; saveContentConfiguration(); applyAdminContent(); renderAdminContentSummary();
   if (state.activeTheme === kind) { state.round = 0; state.completed = false; persistProgress(); }
   renderHome(); refreshContentConfig(kind); showToast(`“${name}”已保存，并设为正在学习。`);
 }
@@ -977,31 +874,31 @@ function addContentGroup() {
 function deleteContentGroup() {
   const kind = $('#contentConfigType').value; const groups = contentGroups(kind);
   if (groups.length <= 1) { showToast('每种内容至少保留一个分组。'); return; }
-  const group = selectedContentGroup(kind); const index = groups.findIndex((item) => item.id === group.id); const wasActive = group.id === adminContent[activeContentGroupKey(kind)]; groups.splice(index, 1);
-  if (wasActive) adminContent[activeContentGroupKey(kind)] = (groups.find((item) => item.name && item.words.length >= 2) || groups[0]).id;
+  const group = selectedContentGroup(kind); const index = groups.findIndex((item) => item.id === group.id); const wasActive = group.id === subjectConfig(kind).activeGroupId; groups.splice(index, 1);
+  if (wasActive) setActiveContentGroup(kind, (groups.find((item) => item.name && item.words.length >= 2) || groups[0]).id);
   editingContentGroupIds[kind] = (groups[Math.max(0, index - 1)] || groups[0]).id; saveContentConfiguration(); applyAdminContent(); renderAdminContentSummary();
   if (state.activeTheme === kind) { state.round = 0; state.completed = false; persistProgress(); }
   renderHome(); refreshContentConfig(kind); showToast('分组已删除。');
 }
-function renderRecitalPieceList() {
-  const active = activeRecitalPiece(); const pieces = recitalPieces();
-  $('#recitalPieceList').innerHTML = pieces.map((piece) => `<button class="content-group-card ${piece.id === active.id ? 'active' : ''}" type="button" data-recital-piece="${escapeHtml(piece.id)}" aria-pressed="${piece.id === active.id}"><span class="content-group-card-head"><b>${escapeHtml(piece.title)}</b>${piece.id === active.id ? '<em>正在朗诵</em>' : ''}</span><span class="content-group-card-meta">${piece.lines.length} 句文本</span><span class="content-group-card-words">${piece.lines.slice(0, 2).map((line) => `<span>${escapeHtml(line)}</span>`).join('')}${piece.lines.length > 2 ? `<i>+${piece.lines.length - 2}</i>` : ''}</span></button>`).join('');
-  $$('[data-recital-piece]', $('#recitalPieceList')).forEach((button) => button.addEventListener('click', () => chooseRecitalPiece(button.dataset.recitalPiece)));
+function renderRecitalGroupList() {
+  const active = activeRecitalGroup(); const groups = recitalGroups();
+  $('#recitalGroupList').innerHTML = groups.map((group) => `<button class="content-group-card ${group.id === active.id ? 'active' : ''}" type="button" data-recital-group="${escapeHtml(group.id)}" aria-pressed="${group.id === active.id}"><span class="content-group-card-head"><b>${escapeHtml(group.name)}</b>${group.id === active.id ? '<em>正在朗诵</em>' : ''}</span><span class="content-group-card-meta">${group.lines.length} 句文本</span><span class="content-group-card-words">${group.lines.slice(0, 2).map((line) => `<span>${escapeHtml(line)}</span>`).join('')}${group.lines.length > 2 ? `<i>+${group.lines.length - 2}</i>` : ''}</span></button>`).join('');
+  $$('[data-recital-group]', $('#recitalGroupList')).forEach((button) => button.addEventListener('click', () => chooseRecitalGroup(button.dataset.recitalGroup)));
 }
 function openRecitalConfig() {
-  const piece = activeRecitalPiece(); $('#recitalPieceTitle').value = piece.title; $('#recitalPieceLines').value = piece.lines.join('\n'); renderRecitalPieceList();
-  $('#recitalConfigModal').classList.add('open'); $('#recitalConfigModal').setAttribute('aria-hidden', 'false'); setTimeout(() => $('.content-group-card.active', $('#recitalPieceList'))?.focus(), 80);
+  const group = activeRecitalGroup(); $('#recitalGroupTitle').value = group.name; $('#recitalGroupLines').value = group.lines.join('\n'); renderRecitalGroupList();
+  $('#recitalConfigModal').classList.add('open'); $('#recitalConfigModal').setAttribute('aria-hidden', 'false'); setTimeout(() => $('.content-group-card.active', $('#recitalGroupList'))?.focus(), 80);
 }
 function closeRecitalConfig() { $('#recitalConfigModal').classList.remove('open'); $('#recitalConfigModal').setAttribute('aria-hidden', 'true'); $('#openRecitalConfig').focus(); }
-function chooseRecitalPiece(id) { const piece = recitalPieces().find((item) => item.id === id) || activeRecitalPiece(); adminContent.activeRecitalPieceId = piece.id; saveContentConfiguration(); applyAdminContent(); renderAdminContentSummary(); if (state.activeTheme === 'action') { state.round = 0; state.completed = false; persistProgress(); } renderHome(); openRecitalConfig(); showToast(`已切换到《${piece.title}》，将按行朗诵。`); }
-function saveRecitalPiece() {
-  const piece = activeRecitalPiece(); const title = $('#recitalPieceTitle').value.trim().slice(0, 24); const lines = normaliseRecitalLines($('#recitalPieceLines').value);
-  if (!title) { showToast('请填写篇目名称。'); $('#recitalPieceTitle').focus(); return; }
-  if (!lines.length) { showToast('请至少添加一行朗诵文本。'); $('#recitalPieceLines').focus(); return; }
-  piece.title = title; piece.lines = lines; saveContentConfiguration(); applyAdminContent(); renderAdminContentSummary(); if (state.activeTheme === 'action') { state.round = 0; state.completed = false; persistProgress(); } renderHome(); openRecitalConfig(); showToast(`《${title}》已保存，共 ${lines.length} 句。`);
+function chooseRecitalGroup(id) { const group = recitalGroups().find((item) => item.id === id) || activeRecitalGroup(); setActiveRecitalGroup(group.id); saveContentConfiguration(); applyAdminContent(); renderAdminContentSummary(); if (state.activeTheme === 'action') { state.round = 0; state.completed = false; persistProgress(); } renderHome(); openRecitalConfig(); showToast(`已切换到《${group.name}》，将按行朗诵。`); }
+function saveRecitalGroup() {
+  const group = activeRecitalGroup(); const name = $('#recitalGroupTitle').value.trim().slice(0, 24); const lines = normaliseRecitalLines($('#recitalGroupLines').value);
+  if (!name) { showToast('请填写分组名称。'); $('#recitalGroupTitle').focus(); return; }
+  if (!lines.length) { showToast('请至少添加一行朗诵文本。'); $('#recitalGroupLines').focus(); return; }
+  group.name = name; group.lines = lines; saveContentConfiguration(); applyAdminContent(); renderAdminContentSummary(); if (state.activeTheme === 'action') { state.round = 0; state.completed = false; persistProgress(); } renderHome(); openRecitalConfig(); showToast(`《${name}》已保存，共 ${lines.length} 句。`);
 }
-function addRecitalPiece() { const pieces = recitalPieces(); const piece = { id: `recital-${Date.now()}`, title: '新朗诵篇目', lines: ['请填写第一句文本。'] }; pieces.push(piece); adminContent.activeRecitalPieceId = piece.id; saveContentConfiguration(); applyAdminContent(); renderAdminContentSummary(); openRecitalConfig(); $('#recitalPieceTitle').select(); showToast('已新增篇目，请填写标题和每一句文本。'); }
-function deleteRecitalPiece() { const pieces = recitalPieces(); if (pieces.length <= 1) { showToast('至少保留一篇朗诵文本。'); return; } const piece = activeRecitalPiece(); pieces.splice(pieces.findIndex((item) => item.id === piece.id), 1); adminContent.activeRecitalPieceId = pieces[0].id; saveContentConfiguration(); applyAdminContent(); renderAdminContentSummary(); if (state.activeTheme === 'action') { state.round = 0; state.completed = false; persistProgress(); } renderHome(); openRecitalConfig(); showToast('篇目已删除。'); }
+function addRecitalGroup() { const groups = recitalGroups(); const group = { id: `recital-${Date.now()}`, name: '新朗诵分组', lines: ['请填写第一句文本。'] }; groups.push(group); setActiveRecitalGroup(group.id); saveContentConfiguration(); applyAdminContent(); renderAdminContentSummary(); openRecitalConfig(); $('#recitalGroupTitle').select(); showToast('已新增分组，请填写名称和每一句文本。'); }
+function deleteRecitalGroup() { const groups = recitalGroups(); if (groups.length <= 1) { showToast('至少保留一篇朗诵文本。'); return; } const group = activeRecitalGroup(); groups.splice(groups.findIndex((item) => item.id === group.id), 1); setActiveRecitalGroup(groups[0].id); saveContentConfiguration(); applyAdminContent(); renderAdminContentSummary(); if (state.activeTheme === 'action') { state.round = 0; state.completed = false; persistProgress(); } renderHome(); openRecitalConfig(); showToast('朗诵分组已删除。'); }
 function exportProgress() {
   state.study.backupAt = new Date().toISOString(); persistProgress();
   const payload = { version: 1, exportedAt: new Date().toISOString(), activeProfileId, profiles };
@@ -1031,9 +928,6 @@ async function importProgress(file) {
 $$('[data-screen]').forEach((button) => button.addEventListener('click', () => setScreen(button.dataset.screen)));
 $$('[data-magic-house-tab]').forEach((button) => button.addEventListener('click', () => setMagicHouseTab(button.dataset.magicHouseTab)));
 $('#topbarLessonTitle').addEventListener('click', () => { if (state.screen === 'home') setScreen(state.homeContext === 'closet' ? 'closet' : 'lesson'); });
-$$('.mini-speak').forEach((button) => button.addEventListener('click', () => speak(button.dataset.say)));
-$('#playToday').addEventListener('click', () => selectTheme(state.activeTheme, true));
-$('#homePrimaryAction').addEventListener('click', () => selectTheme(state.activeTheme, true));
 $('#magicHouse').addEventListener('click', () => { setScreen('closet'); showToast('欢迎来到魔法屋，给露娜换上新装吧！'); });
 $('#soundToggle').addEventListener('click', () => { state.soundOn = !state.soundOn; $('#soundToggle').setAttribute('aria-pressed', String(state.soundOn)); $('#soundToggle').setAttribute('aria-label', state.soundOn ? '关闭声音' : '打开声音'); $('#soundToggle').classList.toggle('muted', !state.soundOn); if (!state.soundOn) { window.speechSynthesis?.cancel(); stopNativeTts(); stopWardrobeMusic(); } else if (state.screen === 'closet') startWardrobeMusic(); });
 $('#parentButton').addEventListener('click', openParent); $('#closeParent').addEventListener('click', closeParent); $('#disableParentMode').addEventListener('click', disableParentMode);
@@ -1045,14 +939,13 @@ $('#dailyLimitRange').addEventListener('input', (event) => { const index = Numbe
 $('#dailyLimitRange').addEventListener('change', () => { persistProgress(); showToast(state.study.limitMinutes ? `已设置每日 ${state.study.limitMinutes} 分钟探险时间。` : '已取消每日探险时间限制。'); });
 $('#speechRate').addEventListener('input', (event) => { globalSpeechRate = clamp(Number(event.target.value), .5, 1.5); saveText('luna-global-speech-rate', String(globalSpeechRate)); renderSpeechRateControl(); });
 $('#speechRate').addEventListener('change', () => { window.speechSynthesis?.cancel(); showToast(`全局朗读语速已设为${speechRateLabel()}。`); });
-$('#closeHanziBook').addEventListener('click', closeHanziBook); $('#closeAchievements').addEventListener('click', closeAchievements);
 $('#recordingToggle').addEventListener('click', () => { state.recordingEnabled = !state.recordingEnabled; persistProgress(); renderParentProfileControls(); showToast(state.recordingEnabled ? '已开启录音跟读；录音只留在当前页面。' : '已关闭录音跟读。'); });
 $('#adminButton').addEventListener('click', () => { closeParent(); openAdmin(); });
 $('#closeAdmin').addEventListener('click', closeAdmin);
 $('#openEnglishConfig').addEventListener('click', () => openContentConfig('english')); $('#openHanziConfig').addEventListener('click', () => openContentConfig('hanzi')); $('#openRecitalConfig').addEventListener('click', openRecitalConfig);
 $('#closeContentConfig').addEventListener('click', closeContentConfig); $('#saveContentGroup').addEventListener('click', saveSelectedContentGroup); $('#addContentGroup').addEventListener('click', addContentGroup); $('#deleteContentGroup').addEventListener('click', deleteContentGroup);
 $('#contentConfigModal').addEventListener('click', (event) => { if (event.target === $('#contentConfigModal')) closeContentConfig(); });
-$('#closeRecitalConfig').addEventListener('click', closeRecitalConfig); $('#addRecitalPiece').addEventListener('click', addRecitalPiece); $('#saveRecitalPiece').addEventListener('click', saveRecitalPiece); $('#deleteRecitalPiece').addEventListener('click', deleteRecitalPiece); $('#recitalConfigModal').addEventListener('click', (event) => { if (event.target === $('#recitalConfigModal')) closeRecitalConfig(); });
+$('#closeRecitalConfig').addEventListener('click', closeRecitalConfig); $('#addRecitalGroup').addEventListener('click', addRecitalGroup); $('#saveRecitalGroup').addEventListener('click', saveRecitalGroup); $('#deleteRecitalGroup').addEventListener('click', deleteRecitalGroup); $('#recitalConfigModal').addEventListener('click', (event) => { if (event.target === $('#recitalConfigModal')) closeRecitalConfig(); });
 $('#exportProgress').addEventListener('click', exportProgress);
 $('#importProgress').addEventListener('click', () => $('#importProgressFile').click());
 $('#importProgressFile').addEventListener('change', (event) => { importProgress(event.target.files[0]); event.target.value = ''; });
