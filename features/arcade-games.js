@@ -1,0 +1,117 @@
+export const ARCADE_BOARD_SIZE = 8;
+
+export const ARCADE_GAMES = [
+  { id: 'memory', name: '魔法翻翻乐', icon: '✦', description: '翻开卡片，找到一样的魔法伙伴。', meta: '约 2 分钟 · 每日奖励' },
+  { id: 'listen', name: '听音找一找', icon: '◖', description: '听露娜读一读，点出正确图片。', meta: '约 2 分钟 · 每日奖励' },
+  { id: 'numbers', name: '数字泡泡', icon: '123', description: '听到数字后，点破正确泡泡。', meta: '约 1 分钟 · 每日奖励' },
+  { id: 'colors', name: '颜色魔法', icon: '●', description: '听到颜色后，点中正确魔法色。', meta: '约 1 分钟 · 每日奖励' },
+  { id: 'rhythm', name: '星星节奏', icon: '♫', description: '记住闪亮顺序，跟着点一遍。', meta: '约 2 分钟 · 挑战纪录' },
+  { id: 'match', name: '魔法消消乐', icon: '✹', description: '点中相连的魔法宝石，连续消除。', meta: '约 2 分钟 · 挑战纪录' },
+  { id: 'arrows', name: '箭头快跑', icon: '➜', description: '找出没有阻挡的箭头，全部消除。', meta: '约 2 分钟 · 挑战纪录' },
+  { id: 'fruit', name: '水果魔法切切乐', icon: '✣', description: '滑动切开飞来的魔法水果，小心炸弹。', meta: '约 2 分钟 · 挑战纪录' },
+  { id: 'whack', name: '打地鼠', icon: '●', description: '看准了敲！别让地鼠跑掉。', meta: '反应力 · 每日奖励' },
+  { id: 'catch', name: '接水果', icon: '⌒', description: '移动篮子，接住落下的水果。', meta: '反应力 · 每日奖励' },
+  { id: 'lights', name: '点灯游戏', icon: '✦', description: '翻转灯光，熄灭全部魔法格。', meta: '逻辑 · 每日奖励' },
+  { id: 'tictactoe', name: '井字棋', icon: '○', description: '和露娜进行三连棋对战。', meta: '对战 · 每日奖励' },
+  { id: 'game2048', name: '2048', icon: '2048', description: '合并数字到 2048。', meta: '益智 · 原始玩法' },
+  { id: 'hanoi', name: '汉诺塔', icon: '△', description: '移动圆盘到目标柱。', meta: '逻辑 · 原始玩法' },
+  { id: 'klotski', name: '华容道', icon: '▦', description: '移动方块，帮助主角离开。', meta: '益智 · 原始玩法' },
+  { id: 'sudoku', name: '数独', icon: '4×4', description: '完成入门数独填数挑战。', meta: '逻辑 · 原始玩法' },
+  { id: 'bulls', name: '猜数字', icon: '1234', description: '推理出隐藏的四位数字。', meta: '逻辑 · 原始玩法' },
+];
+
+export const ARCADE_PICTURE_ITEMS = [
+  { id: 'cat', label: '小猫', image: 'assets/learning/vocabulary/cat.svg' },
+  { id: 'dog', label: '小狗', image: 'assets/learning/vocabulary/dog.svg' },
+  { id: 'rabbit', label: '小兔子', image: 'assets/learning/vocabulary/rabbit.svg' },
+];
+
+export const ARCADE_COLOR_ITEMS = [
+  { id: 'red', label: '红色', image: 'assets/learning/vocabulary/red.svg', color: '#ef6274' },
+  { id: 'yellow', label: '黄色', image: 'assets/learning/vocabulary/yellow.svg', color: '#f4c952' },
+  { id: 'blue', label: '蓝色', image: 'assets/learning/vocabulary/blue.svg', color: '#75a8f0' },
+];
+
+export const RHYTHM_COLORS = ['violet', 'gold', 'sky', 'pink'];
+export const MATCH_TILES = ['star', 'moon', 'gem', 'flower'];
+
+export function shuffled(values) {
+  const copy = [...values];
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const target = Math.floor(Math.random() * (index + 1));
+    [copy[index], copy[target]] = [copy[target], copy[index]];
+  }
+  return copy;
+}
+
+export function createMemoryDeck() {
+  return shuffled([...ARCADE_PICTURE_ITEMS, ...ARCADE_PICTURE_ITEMS].map((item, index) => ({ ...item, cardId: `${item.id}-${index}` })));
+}
+
+export function createListeningRound() {
+  const answer = ARCADE_PICTURE_ITEMS[Math.floor(Math.random() * ARCADE_PICTURE_ITEMS.length)];
+  return { answer, choices: shuffled(ARCADE_PICTURE_ITEMS) };
+}
+
+export function createColorRound() {
+  const answer = ARCADE_COLOR_ITEMS[Math.floor(Math.random() * ARCADE_COLOR_ITEMS.length)];
+  return { answer, choices: shuffled(ARCADE_COLOR_ITEMS) };
+}
+
+export function createNumberRound() {
+  const answer = Math.floor(Math.random() * 3) + 1;
+  return { answer, choices: shuffled([1, 2, 3]) };
+}
+
+export function nextRhythmColor() {
+  return RHYTHM_COLORS[Math.floor(Math.random() * RHYTHM_COLORS.length)];
+}
+
+export function createMatchBoard() {
+  const board = Array(ARCADE_BOARD_SIZE ** 2).fill(null);
+  const palette = shuffled(MATCH_TILES);
+  for (let row = 0; row < ARCADE_BOARD_SIZE; row += 1) {
+    for (let col = 0; col < ARCADE_BOARD_SIZE; col += 1) {
+      const block = Math.floor(row / 2) * 4 + Math.floor(col / 2);
+      board[row * ARCADE_BOARD_SIZE + col] = palette[block % palette.length];
+    }
+  }
+  return board;
+}
+
+export function createArrowBoard(size = ARCADE_BOARD_SIZE) {
+  const arrows = [];
+  for (let row = 0; row < size; row += 1) {
+    for (let col = 0; col < size; col += 1) {
+      const direction = row === 0 ? 'up' : row === size - 1 ? 'down' : col === 0 ? 'left' : col === size - 1 ? 'right' : (row + col) % 2 ? 'up' : 'left';
+      arrows.push({ id: `a-${size}-${row}-${col}`, row, col, direction });
+    }
+  }
+  return shuffled(arrows);
+}
+
+export const FRUIT_TYPES = ['apple', 'orange', 'berry', 'melon'];
+export function createFruitWave(count = 5) {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `fruit-${Date.now()}-${index}`,
+    type: index === count - 1 && Math.random() < 0.35 ? 'bomb' : FRUIT_TYPES[Math.floor(Math.random() * FRUIT_TYPES.length)],
+    x: 15 + (index * 17 + Math.floor(Math.random() * 10)) % 70,
+    y: 24 + (Math.floor(index / 3) * 34) + Math.floor(Math.random() * 12),
+    sliced: false,
+  }));
+}
+
+export function createLightsBoard(size = 4) {
+  const board = Array(size * size).fill(false);
+  const toggles = shuffled(Array.from({ length: 7 }, (_, index) => index));
+  const flip = (index) => {
+    const row = Math.floor(index / size); const col = index % size;
+    [[row, col], [row - 1, col], [row + 1, col], [row, col - 1], [row, col + 1]].forEach(([r, c]) => {
+      if (r >= 0 && r < size && c >= 0 && c < size) board[r * size + c] = !board[r * size + c];
+    });
+  };
+  toggles.forEach(flip);
+  return board;
+}
+
+export function nextArcadeLane() { return Math.floor(Math.random() * 3); }

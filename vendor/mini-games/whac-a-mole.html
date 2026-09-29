@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8">
+<meta name="description" content="小游戏合集 · 🔨 打地鼠">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Ctext%20y%3D%2714%27%20font-size%3D%2714%27%3E%F0%9F%8E%AE%3C%2Ftext%3E%3C%2Fsvg%3E">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🔨 打地鼠</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100dvh}
+h1{margin:20px 0 10px;font-size:1.8em;color:#e94560}
+#info{font-size:1.1em;margin-bottom:15px;color:#aaa}
+#info span{color:#fff;font-weight:bold}
+#board{display:grid;grid-template-columns:repeat(3,120px);gap:12px;margin-bottom:20px}
+.hole{width:120px;height:120px;background:#0f3460;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:3em;cursor:pointer;transition:.15s;position:relative;overflow:hidden;border:3px solid #16213e}
+.hole.active{background:#e94560;border-color:#fff;transform:scale(1.05)}
+.hole.active::after{content:'';position:absolute;width:100%;height:100%;background:radial-gradient(circle,rgba(255,255,255,.2),transparent)}
+.hole.hit{animation:hit .2s}
+@keyframes hit{0%{transform:scale(.9)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+#controls{display:flex;gap:15px;margin-bottom:20px}
+button{padding:10px 28px;font-size:1em;border:none;border-radius:8px;cursor:pointer;background:#e94560;color:#fff;font-weight:bold;transition:.2s}
+button:hover{background:#c7364f;transform:scale(1.05)}
+button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+#timer{font-size:1.2em;margin-bottom:15px;color:#7ec8e3}
+.back{position:absolute;top:15px;left:15px;color:#888;text-decoration:none}
+.back:hover{color:#e94560}
+
+body{padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(orientation:landscape){body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}}
+
+</style></head><body>
+<h1>🔨 打地鼠</h1>
+<p id="timer">⏱ 30s</p>
+<div id="info">得分: <span id="score">0</span> | 最高: <span id="high">0</span></div>
+<div id="board"></div>
+<div id="controls"><button id="startBtn">开始游戏</button></div>
+<script>
+const board=document.getElementById('board'),scoreEl=document.getElementById('score')
+const highEl=document.getElementById('high'),timerEl=document.getElementById('timer')
+const startBtn=document.getElementById('startBtn')
+let score=0,high=parseInt(localStorage.getItem('whacHigh')||'0'),timeLeft=30
+let timer=null,moleInterval=null,active=false
+highEl.textContent=high
+for(let i=0;i<9;i++){const d=document.createElement('div');d.className='hole';d.dataset.id=i;board.appendChild(d)}
+const holes=document.querySelectorAll('.hole')
+function getRand(){return Math.floor(Math.random()*9)}
+function showMole(){holes.forEach(h=>h.classList.remove('active'));const i=getRand();holes[i].classList.add('active')}
+function hideMole(){holes.forEach(h=>h.classList.remove('active'))}
+function whack(e){
+  if(!active)return
+  const h=e.currentTarget
+  if(h.classList.contains('active')){
+    score++;scoreEl.textContent=score
+    h.classList.remove('active');h.classList.add('hit')
+    setTimeout(()=>h.classList.remove('hit'),200)
+  }
+}
+holes.forEach(h=>h.addEventListener('click',whack))
+function startGame(){
+  score=0;timeLeft=30;active=true
+  scoreEl.textContent='0';timerEl.textContent='⏱ 30s'
+  startBtn.disabled=true;startBtn.textContent='游戏中...'
+  showMole()
+  moleInterval=setInterval(()=>{if(active)showMole()},800)
+  timer=setInterval(()=>{
+    timeLeft--;timerEl.textContent=`⏱ ${timeLeft}s`
+    if(timeLeft<=0)endGame()
+  },1000)
+}
+function endGame(){
+  active=false
+  clearInterval(timer);clearInterval(moleInterval)
+  hideMole()
+  startBtn.disabled=false;startBtn.textContent='再来一局'
+  if(score>high){high=score;localStorage.setItem('whacHigh',high);highEl.textContent=high}
+  timerEl.textContent=`⏱ 结束！得分: ${score}`
+}
+startBtn.addEventListener('click',()=>{if(startBtn.textContent==='结束游戏')endGame();else startGame()})
+</script></body></html>

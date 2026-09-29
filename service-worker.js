@@ -11,6 +11,8 @@ const APP_SHELL = [
   './features/theme-catalog.js',
   './features/content-catalog.js',
   './features/default-content.js',
+  './features/build-info.js',
+  './features/arcade-games.js',
   './manifest.webmanifest',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',
@@ -34,7 +36,20 @@ const APP_SHELL = [
   './assets/learning/vocabulary/rabbit.svg',
   './assets/learning/vocabulary/jump.svg',
   './assets/learning/vocabulary/clap.svg',
-  './assets/learning/vocabulary/dance.svg'
+  './assets/learning/vocabulary/dance.svg',
+  './vendor/match-3-game/index.html',
+  './vendor/match-3-game/resources/style.css',
+  './vendor/match-3-game/resources/app.js',
+  './vendor/mini-games/whac-a-mole.html',
+  './vendor/mini-games/library/fruit-catch.html',
+  './vendor/mini-games/library/2048.html',
+  './vendor/mini-games/library/hanoi.html',
+  './vendor/mini-games/library/klotski.html',
+  './vendor/mini-games/library/sudoku.html',
+  './vendor/mini-games/library/bulls-and-cows.html',
+  './vendor/mini-games/fruitninjia/index.html',
+  './vendor/mini-games/fruitninjia/images/index.css',
+  './vendor/mini-games/fruitninjia/scripts/all.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -70,7 +85,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   // CSS and JS use network-first so visual fixes are never held behind an old offline cache.
-  if (url.pathname.endsWith('/style.css') || url.pathname.endsWith('/styles/screens/adventure-map.css') || url.pathname.endsWith('/app.js')) {
+  if (url.pathname.endsWith('/style.css') || url.pathname.endsWith('/styles/screens/adventure-map.css') || url.pathname.endsWith('/app.js') || url.pathname.includes('/features/')) {
     event.respondWith(fetch(request).then((response) => {
       if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
       return response;

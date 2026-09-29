@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8">
+<meta name="description" content="小游戏合集 · 🔲 数独">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Ctext%20y%3D%2714%27%20font-size%3D%2714%27%3E%F0%9F%8E%AE%3C%2Ftext%3E%3C%2Fsvg%3E">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🔲 数独</title>
+<style>*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#1a1a2e;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;min-min-height:100dvh;padding:10px;user-select:none}
+h1{margin:10px 0;font-size:clamp(1.2em,5vw,1.8em);color:#e94560}
+#info{font-size:clamp(.85em,3vw,1em);color:#aaa;margin-bottom:6px}
+#board{display:grid;gap:2px;background:#16213e;padding:4px;border-radius:8px;border:3px solid #0f3460;touch-action:manipulation;margin:10px 0}
+.cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:clamp(1em,4.5vw,1.5em);font-weight:bold;border-radius:3px;cursor:pointer;background:#0a0a1a;touch-action:manipulation}
+.cell.fixed{color:#7ec8e3;background:#0f2430}
+.cell.player{color:#fff}
+.cell.selected{background:#1a4a6a}
+.cell.same{background:#162a3a}
+#numpad{display:grid;grid-template-columns:repeat(5,1fr);gap:clamp(4px,1.5vw,8px);width:min(95vw,300px);margin:10px 0}
+#numpad button,.clear-btn{padding:clamp(8px,2.5vw,12px);font-size:clamp(.85em,3.5vw,1.2em);border:none;border-radius:6px;cursor:pointer;background:#0f3460;color:#fff;font-weight:bold;touch-action:manipulation}
+#numpad button:active,.clear-btn:active{background:#e94560}
+.clear-btn{background:#16213e;padding:clamp(6px,2vw,10px) clamp(14px,4vw,25px);margin:4px}
+#controls{display:flex;gap:10px;margin:8px 0;flex-wrap:wrap;justify-content:center}
+button{padding:clamp(6px,2vw,10px) clamp(14px,4vw,25px);font-size:clamp(.85em,3vw,1em);border:none;border-radius:8px;cursor:pointer;background:#e94560;color:#fff;font-weight:bold}
+.back{position:absolute;top:10px;left:10px;color:#888;text-decoration:none;font-size:14px;z-index:10}
+.back:hover{color:#e94560}
+
+body{padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(orientation:landscape){body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}}
+
+</style></head><body>
+<h1>🔲 数独</h1>
+<p id="info">4×4 入门数独 | <span id="remain">0</span> 空格 | 最佳: <span id="best">—</span></p>
+<div id="board"></div>
+<div id="numpad"></div>
+<div id="controls"><button id="newBtn">新游戏</button></div>
+<script>
+const BOARD=document.getElementById('board'),remainEl=document.getElementById('remain'),numpad=document.getElementById('numpad'),bestEl=document.getElementById('best')
+const newBtn=document.getElementById('newBtn')
+const N=4,SR=2,SC=2
+let grid=[],fixed=[],selected=null,remaining=0,steps=0,best=parseInt(localStorage.getItem('bestSudoku')||'0')
+
+// Pre-set 4x4 puzzles (easy)
+const PUZZLES=[
+  {g:[1,0,3,0,0,3,4,1,3,4,0,2,0,0,1,0],s:[1,4,3,2,2,3,4,1,3,4,1,2,4,2,1,3]},
+  {g:[0,0,4,3,0,4,0,0,3,0,0,1,0,1,2,0],s:[2,1,4,3,1,4,3,2,3,2,1,4,4,1,2,3]},
+  {g:[4,0,0,2,0,3,0,0,0,0,2,0,1,0,0,3],s:[4,1,3,2,2,3,1,4,3,4,2,1,1,2,4,3]},
+  {g:[0,3,0,0,2,0,0,1,1,0,0,2,0,0,3,0],s:[4,3,1,2,2,4,3,1,1,2,4,2,3,1,2,4]},
+  // Additional
+  {g:[0,1,0,4,3,0,0,0,0,0,0,1,2,0,3,0],s:[2,1,3,4,3,4,2,1,4,2,1,3,1,3,4,2]},
+]
+let curPuzzle=0
+
+function solveGrid(g){return PUZZLES.find((_,i)=>i===curPuzzle)?.s||g}
+
+function newGame(){
+  curPuzzle=Math.floor(Math.random()*PUZZLES.length)
+  const p=PUZZLES[curPuzzle];grid=[...p.g];fixed=grid.map(v=>v!==0);remaining=grid.filter(v=>v===0).length
+  selected=null;steps=0
+  best=parseInt(localStorage.getItem('bestSudoku')||'0');bestEl.textContent=best>0?best+' 步':'—'
+  remainEl.textContent=remaining;render()
+}
+function render(){
+  const w=Math.min(window.innerWidth*.88,320)
+  const cs=Math.floor(w/N-4)
+  BOARD.style.gridTemplateColumns=`repeat(${N},${cs}px)`
+  BOARD.style.width=(cs*N+N*2+8)+'px'
+  BOARD.innerHTML=''
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    const i=r*N+c,cell=document.createElement('div')
+    cell.className='cell'
+    if(fixed[i])cell.className+=' fixed'
+    else if(grid[i])cell.className+=' player'
+    if(selected===i)cell.className+=' selected'
+    cell.textContent=grid[i]||''
+    cell.style.width=cs+'px';cell.style.height=cs+'px'
+    cell.addEventListener('click',()=>{selected=i;render()})
+    cell.addEventListener('touchstart',(e)=>{e.preventDefault();selected=i;render()},{passive:false})
+    BOARD.appendChild(cell)
+  }
+  renderNumpad()
+}
+function renderNumpad(){
+  numpad.innerHTML=''
+  for(let n=1;n<=4;n++){
+    const btn=document.createElement('button')
+    btn.textContent=n;btn.addEventListener('click',()=>placeNum(n))
+    btn.addEventListener('touchstart',(e)=>{e.preventDefault();placeNum(n)},{passive:false})
+    numpad.appendChild(btn)
+  }
+  const clr=document.createElement('button')
+  clr.textContent='✕';clr.style.background='#16213e'
+  clr.addEventListener('click',()=>placeNum(0))
+  clr.addEventListener('touchstart',(e)=>{e.preventDefault();placeNum(0)},{passive:false})
+  numpad.appendChild(clr)
+}
+function placeNum(n){
+  if(selected===null||fixed[selected])return
+  grid[selected]=n;steps++
+  remaining=grid.filter((v,i)=>v===0&&!fixed[i]).length
+  remainEl.textContent=remaining
+  if(remaining===0){
+    const sol=solveGrid(grid)
+    if(grid.every((v,i)=>v===sol[i])){if(best===0||steps<best){best=steps;localStorage.setItem('bestSudoku',best);bestEl.textContent=best+' 步'}setTimeout(()=>alert('🎉 正确完成！用了 '+steps+' 步'),100)}
+    else{setTimeout(()=>alert('❌ 有错误，再检查一下'),100)}
+  }
+  render()
+}
+newBtn.addEventListener('click',newGame)
+window.addEventListener('resize',()=>render())
+newGame()
+</script></body></html>

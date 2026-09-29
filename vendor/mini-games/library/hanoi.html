@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8">
+<meta name="description" content="小游戏合集 · 🗼 汉诺塔">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Ctext%20y%3D%2714%27%20font-size%3D%2714%27%3E%F0%9F%8E%AE%3C%2Ftext%3E%3C%2Fsvg%3E">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🗼 汉诺塔</title>
+<style>*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#1a1a2e;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;min-min-height:100dvh;padding:10px;user-select:none}
+h1{margin:10px 0;font-size:clamp(1.2em,5vw,1.8em);color:#e94560}
+#info{font-size:clamp(.9em,3.5vw,1.1em);color:#aaa;margin-bottom:8px;display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+#info span{color:#fff}
+#game{display:flex;gap:clamp(6px,2vw,15px);width:min(95vw,500px);margin:10px 0;touch-action:manipulation}
+.peg{flex:1;height:clamp(180px,50vw,280px);background:#0f3460;border-radius:0 0 8px 8px;display:flex;flex-direction:column-reverse;align-items:center;padding:0 4px 4px;cursor:pointer;position:relative;border-top:3px solid #1a4a7a;touch-action:manipulation}
+.peg::after{content:'';position:absolute;bottom:0;width:4px;height:100%;background:#1a4a7a;border-radius:2px}
+.disk{border-radius:4px;z-index:1;transition:.15s;margin:2px 0;touch-action:manipulation;border:1px solid rgba(255,255,255,.2);flex-shrink:0}
+.disk.selected{box-shadow:0 0 12px rgba(233,69,96,.8);transform:scale(1.05)}
+#controls{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap;justify-content:center}
+button{padding:clamp(6px,2vw,10px) clamp(14px,4vw,25px);font-size:clamp(.85em,3vw,1em);border:none;border-radius:8px;cursor:pointer;background:#e94560;color:#fff;font-weight:bold}
+button:hover{background:#c7364f}
+.disk-btn{background:#0f3460}.disk-btn.active{background:#e94560}
+#msg{color:#7ec8e3;font-size:clamp(.85em,3vw,1em);height:24px;margin-bottom:5px}
+.back{position:absolute;top:10px;left:10px;color:#888;text-decoration:none;font-size:14px;z-index:10}
+.back:hover{color:#e94560}
+
+body{padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(orientation:landscape){body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}}
+
+</style></head><body>
+<h1>🗼 汉诺塔</h1>
+<div id="info"><span>步数: <span id="count">0</span></span><span>最少: <span id="min">31</span></span><span>最佳: <span id="best">—</span></span></div>
+<div id="msg">点击柱子选择/放置圆盘</div>
+<div id="game"></div>
+<div id="controls">
+  <button id="resetBtn">重新开始</button>
+  <button class="disk-btn active" data-n="5">5盘</button>
+  <button class="disk-btn" data-n="6">6盘</button>
+  <button class="disk-btn" data-n="7">7盘</button>
+</div>
+<script>
+const GAME=document.getElementById('game'),countEl=document.getElementById('count'),msgEl=document.getElementById('msg'),bestEl=document.getElementById('best')
+const resetBtn=document.getElementById('resetBtn')
+const COLORS=['#e94560','#f39c12','#2ecc71','#3498db','#9b59b6','#1abc9c','#e67e22']
+let disks=5,pegs=[[],[],[]],count=0,selected=null,best=0
+
+function initGame(n){
+  disks=n||disks;pegs=[[],[],[]];count=0;selected=null
+  document.getElementById('min').textContent=Math.pow(2,disks)-1;best=parseInt(localStorage.getItem('bestHanoi'+disks)||'0');bestEl.textContent=best>0?best+' 步':'—'
+  for(let i=disks;i>0;i--)pegs[0].push(i)
+  countEl.textContent='0';msgEl.textContent='点击柱子选择/放置圆盘'
+  render()
+}
+function render(){
+  GAME.innerHTML=''
+  const pw=Math.min(window.innerWidth*.95-20,500)
+  const ph=Math.min(280,Math.max(180,window.innerHeight*.35))
+  const pegW=Math.floor(pw/3-8)
+  GAME.style.width=pw+'px'
+  for(let pi=0;pi<3;pi++){
+    const peg=document.createElement('div')
+    peg.className='peg'
+    peg.style.width=pegW+'px';peg.style.height=ph+'px'
+    peg.dataset.pi=pi
+    const maxW=pegW-12
+    for(let di=0;di<pegs[pi].length;di++){
+      const disk=document.createElement('div')
+      const dw=pegs[pi][di]/disks*maxW
+      const color=COLORS[(pegs[pi][di]-1)%COLORS.length]
+      disk.className='disk'+(selected&&selected[0]===pi&&selected[1]===di?' selected':'')
+      disk.style.width=Math.max(16,dw)+'px'
+      disk.style.height=Math.max(14,Math.min(22,ph/disks/1.5))+'px'
+      disk.style.background=color
+      peg.appendChild(disk)
+    }
+    peg.addEventListener('click',()=>clickPeg(pi))
+    peg.addEventListener('touchstart',(e)=>{e.preventDefault();clickPeg(pi)},{passive:false})
+    GAME.appendChild(peg)
+  }
+}
+function clickPeg(pi){
+  if(selected===null){
+    if(!pegs[pi].length){msgEl.textContent='这根柱子没有圆盘';return}
+    selected=[pi,pegs[pi].length-1]
+    msgEl.textContent=`已选中 ${pegs[pi][pegs[pi].length-1]} 号盘`
+    render();return
+  }
+  const[fromPi]=selected
+  if(fromPi===pi){selected=null;msgEl.textContent='取消选择';render();return}
+  if(pegs[pi].length&&pegs[pi][pegs[pi].length-1]<pegs[fromPi][pegs[fromPi].length-1]){
+    msgEl.textContent='不能放在更小的盘上';selected=null;render();return
+  }
+  const diskVal=pegs[fromPi].pop()
+  pegs[pi].push(diskVal)
+  count++;countEl.textContent=count
+  selected=null
+  if(pegs[2].length===disks){
+    msgEl.textContent='🎉 恭喜完成！'
+    render()
+    if(best===0||count<best){best=count;localStorage.setItem('bestHanoi'+disks,best);bestEl.textContent=best+' 步'}
+    setTimeout(()=>alert(`🎉 完成！用了 ${count} 步`),100)
+  }else{
+    msgEl.textContent='移动成功 ✓'
+    render()
+  }
+}
+resetBtn.addEventListener('click',()=>initGame(disks))
+document.querySelectorAll('.disk-btn').forEach(b=>b.addEventListener('click',_=>{
+  document.querySelectorAll('.disk-btn').forEach(x=>x.classList.remove('active'))
+  b.classList.add('active');initGame(parseInt(b.dataset.n))
+}))
+window.addEventListener('resize',()=>render())
+initGame(5)
+</script></body></html>

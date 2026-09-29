@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8">
+<meta name="description" content="小游戏合集 · 🏯 华容道">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Ctext%20y%3D%2714%27%20font-size%3D%2714%27%3E%F0%9F%8E%AE%3C%2Ftext%3E%3C%2Fsvg%3E">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🏯 华容道</title>
+<style>*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#1a1a2e;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;min-min-height:100dvh;padding:10px;user-select:none}
+h1{margin:10px 0;font-size:clamp(1.2em,5vw,1.8em);color:#e94560}
+#info{font-size:clamp(.9em,3.5vw,1.1em);color:#aaa;margin-bottom:8px}
+#info span{color:#fff}
+#board{position:relative;width:min(90vw,320px);height:min(90vw,320px);background:#8B4513;border:3px solid #654321;border-radius:8px;overflow:hidden;touch-action:manipulation}
+.piece{position:absolute;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:clamp(.7em,3vw,1em);font-weight:bold;color:#fff;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:pointer;transition:left .15s,top .15s;touch-action:manipulation;border:1px solid rgba(255,255,255,.15)}
+#controls{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap;justify-content:center}
+button{padding:clamp(6px,2vw,10px) clamp(14px,4vw,25px);font-size:clamp(.85em,3vw,1em);border:none;border-radius:8px;cursor:pointer;background:#e94560;color:#fff;font-weight:bold}
+button:hover{background:#c7364f}#count{color:#7ec8e3}
+.back{position:absolute;top:10px;left:10px;color:#888;text-decoration:none;font-size:14px;z-index:10}
+.back:hover{color:#e94560}
+@media(min-width:600px){#board{width:320px;height:320px}.piece{font-size:1em}}
+
+body{padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(orientation:landscape){body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}}
+
+</style></head><body>
+<h1>🏯 华容道</h1>
+<p id="info">步数: <span id="count">0</span> | 最佳: <span id="best">—</span></p>
+<div id="board"></div>
+<div id="controls"><button id="resetBtn">重新开始</button></div>
+<script>
+const bestEl=document.getElementById('best')
+// 横刀立马 layout
+// 曹操(2x2) 关羽(2x1) 张飞(1x2) 赵云(1x2) 马超(1x2) 黄忠(1x2) 兵(1x1 x4)
+// Grid is 4 columns x 5 rows
+const PIECES_INIT=[
+  {id:'caocao',label:'曹操',w:2,h:2,x:1,y:0,color:'#c0392b'},
+  {id:'guanyu',label:'关羽',w:2,h:1,x:1,y:2,color:'#2d7d46'},
+  {id:'zhangfei',label:'张飞',w:1,h:2,x:0,y:0,color:'#2980b9'},
+  {id:'zhaoyun',label:'赵云',w:1,h:2,x:3,y:0,color:'#8e44ad'},
+  {id:'machao',label:'马超',w:1,h:2,x:0,y:2,color:'#d35400'},
+  {id:'huangzhong',label:'黄忠',w:1,h:2,x:3,y:2,color:'#16a085'},
+  {id:'bing1',label:'兵',w:1,h:1,x:0,y:4,color:'#95a5a6'},
+  {id:'bing2',label:'兵',w:1,h:1,x:1,y:3,color:'#95a5a6'},
+  {id:'bing3',label:'兵',w:1,h:1,x:2,y:3,color:'#95a5a6'},
+  {id:'bing4',label:'兵',w:1,h:1,x:3,y:4,color:'#95a5a6'},
+]
+// Empty space in 4x5 grid (row 4, col 1+2 are empty)
+let pieces=[],emptyCells=[],moves=0,gridSize=80,best=parseInt(localStorage.getItem('bestKlotski')||'0')
+function getGridSize(){const w=Math.min(window.innerWidth*.9,320);return w/4}
+function clonePieces(p){return p.map(pp=>({...pp}))}
+function getGrid(p){const g=Array.from({length:5},()=>Array(4).fill(null));for(const pp of p)for(let r=0;r<pp.h;r++)for(let c=0;c<pp.w;c++)g[pp.y+r][pp.x+c]=pp.id;return g}
+function findEmptyCells(p){const g=getGrid(p);const e=[];for(let r=0;r<5;r++)for(let c=0;c<4;c++)if(!g[r][c])e.push({r,c});return e}
+function shuffleValid(count=50){
+  let p=clonePieces(PIECES_INIT),lastId=null
+  for(let i=0;i<count;i++){
+    const e=findEmptyCells(p);const movable=[]
+    for(const pp of p)for(const ec of e){if(canMove(pp,ec,p)){movable.push(pp);break}}
+    const filtered=movable.filter(m=>m.id!==lastId)
+    if(!filtered.length)continue
+    const pick=filtered[Math.floor(Math.random()*filtered.length)]
+    const ec=e.find(ec2=>canMove(pick,ec2,p))
+    if(ec){pick.x=ec.c;pick.y=ec.r;lastId=pick.id}
+  }
+  return p
+}
+function canMove(pp,ec,p){
+  if(!ec)return false
+  const g=getGrid(p)
+  // Check if the empty cell is adjacent to this piece
+  for(let r=0;r<pp.h;r++)for(let c=0;c<pp.w;c++){
+    const nr=pp.y+r,nc=pp.x+c
+    if(Math.abs(nr-ec.r)+Math.abs(nc-ec.c)===1&&g[ec.r][ec.c]===null)return true
+  }
+  return false
+}
+
+function initGame(shuffleCount=50){
+  gridSize=getGridSize()
+  if(shuffleCount>0){pieces=shuffleValid(shuffleCount)}else{pieces=clonePieces(PIECES_INIT)}
+  emptyCells=findEmptyCells(pieces);moves=0;best=parseInt(localStorage.getItem('bestKlotski')||'0');bestEl.textContent=best>0?best+' 步':'—'
+  document.getElementById('count').textContent='0'
+  render()
+}
+
+function render(){
+  const b=document.getElementById('board')
+  b.innerHTML=''
+  const s=gridSize
+  for(const p of pieces){
+    const el=document.createElement('div')
+    el.className='piece'
+    el.style.left=(p.x*s)+'px';el.style.top=(p.y*s)+'px'
+    el.style.width=(p.w*s-1)+'px';el.style.height=(p.h*s-1)+'px'
+    el.style.background=p.color
+    el.textContent=p.label
+    el.dataset.id=p.id
+    el.addEventListener('click',()=>tryMove(p))
+    el.addEventListener('touchstart',(e)=>{e.preventDefault();tryMove(p)},{passive:false})
+    b.appendChild(el)
+  }
+}
+
+function tryMove(pp){
+  const e=findEmptyCells(pieces)
+  for(const ec of e){
+    if(canMove(pp,ec,pieces)){
+      pp.x=ec.c;pp.y=ec.r
+      moves++;document.getElementById('count').textContent=moves
+      emptyCells=findEmptyCells(pieces)
+      render()
+      checkWin()
+      return
+    }
+  }
+}
+function checkWin(){
+  // 曹操 at (1,3) to exit: 曹操 bottom edge is row 4 (top row is 0, 2x2, so y+2=row 4)
+  const caocao=pieces.find(p=>p.id==='caocao')
+  if(caocao&&caocao.y===3&&caocao.x===1){
+    if(best===0||moves<best){best=moves;localStorage.setItem('bestKlotski',best);bestEl.textContent=best+' 步'}
+    setTimeout(()=>{alert('🎉 曹操逃出华容道！用了 '+moves+' 步')},100)
+  }
+}
+document.getElementById('resetBtn').addEventListener('click',()=>initGame(30))
+window.addEventListener('resize',()=>{gridSize=getGridSize();render()})
+initGame(30)
+</script></body></html>

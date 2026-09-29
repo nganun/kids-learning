@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8">
+<meta name="description" content="小游戏合集 · 🟦 2048">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Ctext%20y%3D%2714%27%20font-size%3D%2714%27%3E%F0%9F%8E%AE%3C%2Ftext%3E%3C%2Fsvg%3E">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🟦 2048</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100dvh}
+h1{margin:15px 0;font-size:1.8em;color:#e94560}
+#info{font-size:1.1em;margin-bottom:10px;color:#aaa;display:flex;gap:30px}
+#info span{color:#fff;font-weight:bold}
+#gridWrap{background:#0f3460;border:3px solid #16213e;border-radius:8px;padding:8px}
+#grid{display:grid;grid-template-columns:repeat(4,80px);gap:6px}
+.tile{width:80px;height:80px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.8em;font-weight:bold;transition:.1s;background:#0a0a1a;color:#555}
+.tile.t2{background:#eee4da;color:#776e65}
+.tile.t4{background:#ede0c8;color:#776e65}
+.tile.t8{background:#f2b179;color:#f9f6f2}
+.tile.t16{background:#f59563;color:#f9f6f2}
+.tile.t32{background:#f67c5f;color:#f9f6f2}
+.tile.t64{background:#f65e3b;color:#f9f6f2}
+.tile.t128{background:#edcf72;color:#f9f6f2;font-size:1.5em}
+.tile.t256{background:#edcc61;color:#f9f6f2;font-size:1.5em}
+.tile.t512{background:#edc850;color:#f9f6f2;font-size:1.5em}
+.tile.t1024{background:#edc53f;color:#f9f6f2;font-size:1.2em}
+.tile.t2048{background:#edc22e;color:#f9f6f2;font-size:1.2em;box-shadow:0 0 30px rgba(237,194,46,.5)}
+.tile.over{background:#3c3a32;color:#f9f6f2;font-size:.85em}
+#controls{margin:15px 0}
+button{padding:8px 25px;font-size:1em;border:none;border-radius:6px;cursor:pointer;background:#e94560;color:#fff;font-weight:bold}
+button:hover{background:#c7364f}
+.key-hint{font-size:.78em;color:#666;margin-top:4px}
+.back{position:absolute;top:15px;left:15px;color:#888;text-decoration:none}
+.back:hover{color:#e94560}
+
+body{padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(orientation:landscape){body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}}
+
+</style></head><body>
+<h1>🟦 2048</h1>
+<div id="info"><span>得分: <span id="score">0</span></span><span>最高: <span id="best">0</span></span></div>
+<div id="gridWrap"><div id="grid"></div></div>
+<div id="controls"><button id="newBtn">新游戏</button></div>
+<div class="key-hint">方向键移动</div>
+<script>
+const GRID=document.getElementById('grid'),scoreEl=document.getElementById('score'),bestEl=document.getElementById('best')
+const SIZE=4
+let board=[],score=0,best=parseInt(localStorage.getItem('best2048')||'0')
+bestEl.textContent=best
+function initBoard(){board=Array.from({length:SIZE},()=>Array(SIZE).fill(0));score=0;scoreEl.textContent='0'}
+function addTile(){
+  let empty=[]
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++)if(!board[r][c])empty.push({r,c})
+  if(!empty.length)return;const{r,c}=empty[Math.floor(Math.random()*empty.length)];board[r][c]=Math.random()<.9?2:4
+}
+function render(){
+  GRID.innerHTML=''
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    const t=document.createElement('div');t.className='tile';const v=board[r][c]
+    if(v){t.classList.add('t'+v);t.textContent=v}else t.textContent=''
+    GRID.appendChild(t)
+  }
+}
+function slide(row){let arr=row.filter(v=>v);for(let i=0;i<arr.length-1;i++){if(arr[i]===arr[i+1]){arr[i]*=2;score+=arr[i];arr.splice(i+1,1)}}while(arr.length<SIZE)arr.push(0);return arr}
+function move(dr,dc){
+  let moved=false;const old=board.map(r=>[...r])
+  if(dr===0&&dc===1)for(let r=0;r<SIZE;r++)board[r]=slide(board[r])
+  if(dr===0&&dc===-1)for(let r=0;r<SIZE;r++)board[r]=slide(board[r].filter(v=>v).reverse()).reverse()
+  if(dr===1&&dc===0)for(let c=0;c<SIZE;c++){const col=board.map(r=>r[c]);const slid=slide(col);for(let r=0;r<SIZE;r++)board[r][c]=slid[r]}
+  if(dr===-1&&dc===0)for(let c=0;c<SIZE;c++){const col=board.map(r=>r[c]).reverse();const slid=slide(col).reverse();for(let r=0;r<SIZE;r++)board[r][c]=slid[r]}
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++)if(board[r][c]!==old[r][c])moved=true
+  if(moved){addTile();scoreEl.textContent=score;if(score>best){best=score;localStorage.setItem('best2048',best);bestEl.textContent=best}render()}
+  if(checkLose()){setTimeout(()=>alert('游戏结束！得分: '+score),100)}
+}
+function checkLose(){for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){if(!board[r][c])return false;if(c<SIZE-1&&board[r][c]===board[r][c+1])return false;if(r<SIZE-1&&board[r][c]===board[r+1][c])return false}return true}
+function newGame(){initBoard();addTile();addTile();render()}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight')move(0,1);if(e.key==='ArrowLeft')move(0,-1);if(e.key==='ArrowDown')move(1,0);if(e.key==='ArrowUp')move(-1,0)
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault()
+})
+document.getElementById('newBtn').addEventListener('click',newGame)
+newGame()
+</script></body></html>

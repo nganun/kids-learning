@@ -72,3 +72,6 @@
 
 /* Keep the Hanzi Library cloud centered horizontally while preserving its existing vertical stop. */
 .map-hanzi{left:50%;right:auto;transform:translateX(-50%)}.map-hanzi:hover,.map-hanzi:focus-visible{transform:translateX(-50%) translateY(-4px)}
+
+/* Desktop-only placement: keep the Hanzi Library at three-quarters width without touching mobile coordinates. */
+@media(min-width:601px){.map-hanzi{left:75%;right:auto;transform:none}.map-hanzi:hover,.map-hanzi:focus-visible{transform:translateY(-4px)}}

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8">
+<meta name="description" content="小游戏合集 · 🍎 接水果">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Ctext%20y%3D%2714%27%20font-size%3D%2714%27%3E%F0%9F%8E%AE%3C%2Ftext%3E%3C%2Fsvg%3E">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🍎 接水果</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100dvh}
+h1{margin:15px 0;font-size:1.8em;color:#e94560}
+#info{font-size:1.1em;margin-bottom:10px;color:#aaa;display:flex;gap:30px}
+#info span{color:#fff;font-weight:bold}
+#canvasWrap{background:#0f3460;border:3px solid #16213e;border-radius:8px;padding:5px}
+canvas{display:block;background:#0a0a1a;cursor:none;max-width:100%;height:auto;touch-action:none}
+#controls{margin:15px 0}
+button{padding:8px 25px;font-size:1em;border:none;border-radius:6px;cursor:pointer;background:#e94560;color:#fff;font-weight:bold;transition:.2s}
+button:hover{background:#c7364f}
+.key-hint{font-size:.78em;color:#666;margin-top:4px}
+.back{position:absolute;top:15px;left:15px;color:#888;text-decoration:none}
+.back:hover{color:#e94560}
+
+body{padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(orientation:landscape){body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}}
+
+@media(max-width:520px){body{padding:10px 8px 18px;min-height:100dvh}h1{margin:7px 0;font-size:1.45em}#info{width:100%;justify-content:center;gap:8px;margin-bottom:7px;font-size:.83em;white-space:nowrap}#canvasWrap{width:100%;padding:3px}canvas{width:100%;height:auto}#controls{margin:9px 0}.key-hint{font-size:.7em}}
+</style></head><body>
+<h1>🍎 接水果</h1>
+<div id="info"><span>得分: <span id="score">0</span></span><span>漏掉: <span id="missed">0</span>/10</span><span>最高分: <span id="best">0</span></span></div>
+<div id="canvasWrap"><canvas id="game" width="480" height="500"></canvas></div>
+<div id="controls"><button id="startBtn">开始游戏</button></div>
+<div class="key-hint">← → 移动篮子 / 鼠标控制</div>
+<script>
+const CV=document.getElementById('game'),CTX=CV.getContext('2d')
+const scoreEl=document.getElementById('score'),missedEl=document.getElementById('missed'),bestEl=document.getElementById('best')
+const startBtn=document.getElementById('startBtn')
+
+const W=480,H=500,MAX_MISS=10
+let basket={w:90,h:16,x:0}
+let fruits=[],score=0,missed=0,running=false,animId=null,spawnTimer=null,best=parseInt(localStorage.getItem('bestFruit')||'0')
+const FRUITS=['🍎','🍊','🍋','🍇','🍓','🍑','🥝','🍒']
+const BAD=['💀','☠️']
+
+function init(){
+  basket.x=(W-basket.w)/2
+  fruits=[];score=0;missed=0
+  scoreEl.textContent='0';missedEl.textContent='0/10';bestEl.textContent=best
+  if(spawnTimer)clearInterval(spawnTimer)
+}
+
+function spawnFruit(){
+  if(!running)return
+  const isBad=Math.random()<.15
+  fruits.push({
+    x:20+Math.random()*(W-40),
+    y:-20,
+    speed:1.5+Math.random()*2,
+    size:18+Math.random()*8,
+    emoji:isBad?BAD[Math.floor(Math.random()*BAD.length)]:FRUITS[Math.floor(Math.random()*FRUITS.length)],
+    bad:isBad
+  })
+}
+
+function update(){
+  if(!running)return
+  // move fruits
+  for(const f of fruits)f.y+=f.speed
+  // check basket catch
+  const remaining=[]
+  for(const f of fruits){
+    const inRange=f.x>basket.x&&f.x<basket.x+basket.w
+    const onBasket=f.y+f.size>=H-48&&f.y-f.size<=H-30
+    if(inRange&&onBasket){
+      if(f.bad){score=Math.max(0,score-5)}else{score+=10}
+      scoreEl.textContent=score
+      if(score>best){best=score;localStorage.setItem('bestFruit',best);bestEl.textContent=best}
+    }else if(f.y-f.size>H){
+      missed++;missedEl.textContent=`${missed}/10`
+      if(missed>=MAX_MISS){endGame();return}
+    }else{remaining.push(f)}
+  }
+  fruits=remaining
+  render()
+}
+
+function endGame(){
+  running=false
+  if(spawnTimer)clearInterval(spawnTimer)
+  if(animId)cancelAnimationFrame(animId)
+  startBtn.textContent='重新开始'
+  CTX.fillStyle='rgba(0,0,0,.6)';CTX.fillRect(0,0,W,H)
+  CTX.fillStyle='#e94560';CTX.font='bold 36px sans-serif';CTX.textAlign='center'
+  CTX.fillText('游戏结束',W/2,H/2-20)
+  CTX.fillStyle='#fff';CTX.font='22px sans-serif';CTX.fillText(`得分: ${score}`,W/2,H/2+20)
+}
+
+function render(){
+  CTX.fillStyle='#0a0a1a';CTX.fillRect(0,0,W,H)
+  // basket
+  CTX.fillStyle='#7ec8e3';CTX.shadowBlur=8;CTX.shadowColor='#7ec8e3'
+  CTX.fillRect(basket.x,H-38,basket.w,14)
+  CTX.shadowBlur=0
+  // fruits
+  for(const f of fruits){
+    CTX.font=`${f.size}px serif`;CTX.textAlign='center';CTX.textBaseline='middle'
+    CTX.fillText(f.emoji,f.x,f.y)
+  }
+  // ground line
+  CTX.strokeStyle='#16213e';CTX.setLineDash([5,5]);CTX.beginPath();CTX.moveTo(0,H-35);CTX.lineTo(W,H-35);CTX.stroke();CTX.setLineDash([])
+}
+
+function startGame(){
+  init();running=true;startBtn.textContent='游戏中'
+  if(animId)cancelAnimationFrame(animId)
+  if(spawnTimer)clearInterval(spawnTimer)
+  spawnTimer=setInterval(spawnFruit,800)
+  function loop(){update();animId=requestAnimationFrame(loop)}
+  loop()
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft')basket.x=Math.max(0,basket.x-25)
+  if(e.key==='ArrowRight')basket.x=Math.min(W-basket.w,basket.x+25)
+})
+function moveBasket(clientX){if(!running)return;const r=CV.getBoundingClientRect();const x=(clientX-r.left)*W/r.width;basket.x=Math.max(0,Math.min(W-basket.w,x-basket.w/2))}
+document.addEventListener('mousemove',e=>moveBasket(e.clientX))
+CV.addEventListener('pointerdown',e=>{CV.setPointerCapture?.(e.pointerId);moveBasket(e.clientX)})
+CV.addEventListener('pointermove',e=>moveBasket(e.clientX))
+startBtn.addEventListener('click',startGame)
+init();render()
+</script></body></html>

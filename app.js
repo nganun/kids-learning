@@ -7,6 +7,8 @@ import { themeNeedsReview as isThemeReviewDue, recommendedThemeId as getRecommen
 import { createBuiltInThemes } from './features/theme-catalog.js';
 import { WORD_TRANSLATIONS, HANZI_SCENES, WORD_SENTENCES } from './features/content-catalog.js';
 import { DEFAULT_LEARNING_CONTENT } from './features/default-content.js';
+import { ARCADE_GAMES, createArrowBoard, createColorRound, createFruitWave, createLightsBoard, createListeningRound, createMemoryDeck, createNumberRound, nextArcadeLane, nextRhythmColor, ARCADE_BOARD_SIZE } from './features/arcade-games.js';
+import { BUILD_INFO } from './features/build-info.js';
 
 const CHILD_NAME = '荆宝';
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -88,7 +90,7 @@ function wordImage(word) {
 }
 const MAP_META = {
   color: { name: '彩虹花园', hint: '找一找会发光的颜色', icon: 'flower' },
-  animal: { name: '月光动物园', hint: '去和小动物打招呼', icon: 'paw' },
+  animal: { name: '小小游戏机', hint: '翻翻卡片，听音找图', icon: 'paw' },
   action: { name: '朗诵小舞台', hint: '听一听，把文本读出来', icon: 'spark' },
   number: { name: '数字高塔', hint: '数一数城堡星星', icon: 'tower' },
   hanzi: { name: '汉字图书塔', hint: '打开会说话的文字', icon: 'book' },
@@ -153,6 +155,8 @@ function createProfile(name = CHILD_NAME) {
     daily: freshDaily(),
     streak: { count: 0, lastCompletedDate: '' },
     recordingEnabled: false,
+    activityDates: [],
+    arcadeStats: { totalPlays: 0, bestRhythm: 0, bestMatch: 0, bestArrows: 0, bestFruit: 0, bestWhack: 0, bestCatch: 0, dailyPlays: {} },
     world: {}, achievements: [], study: { date: localDateKey(), seconds: 0, limitMinutes: 5, backupAt: '' },
     ocOwned: ['top_starter', 'bottom_starter', 'shoes_starter', 'held_flower'],
     ocAvatar: cloneStarterAvatar(),
@@ -180,12 +184,12 @@ function childName() { return activeProfile()?.name || CHILD_NAME; }
 function dailyFor(profile) { return profile.dailyDate === todayKey ? profile.daily : freshDaily(); }
 const initialProfile = activeProfile();
 const state = {
-  screen: 'home', homeContext: 'lesson', magicHouseTab: 'closet', soundOn: true, recitalMode: 'line', round: 0, completed: false, roundLocked: false,
+  screen: 'home', homeContext: 'lesson', magicHouseTab: 'closet', arcadeGameId: '', arcadeState: null, soundOn: true, recitalMode: 'line', round: 0, completed: false, roundLocked: false,
   activeTheme: initialProfile.activeTheme || 'color', lessonMode: 'learn',
   completedThemes: initialProfile.completedThemes || [], learnedWords: initialProfile.learnedWords || [], wordProgress: initialProfile.wordProgress || {},
   stars: Number(initialProfile.stars || 0), daily: dailyFor(initialProfile),
   streak: initialProfile.streak || { count: 0, lastCompletedDate: '' },
-  recordingEnabled: Boolean(initialProfile.recordingEnabled), world: initialProfile.world || {}, achievements: initialProfile.achievements || [], study: initialProfile.study || { date: todayKey, seconds: 0, limitMinutes: 5, backupAt: '' },
+  recordingEnabled: Boolean(initialProfile.recordingEnabled), activityDates: initialProfile.activityDates || [], arcadeStats: initialProfile.arcadeStats || { totalPlays: 0, bestRhythm: 0, dailyPlays: {} }, world: initialProfile.world || {}, achievements: initialProfile.achievements || [], study: initialProfile.study || { date: todayKey, seconds: 0, limitMinutes: 5, backupAt: '' },
   ocTab: 'hair', ocOwned: initialProfile.ocOwned || ['top_starter', 'bottom_starter', 'shoes_starter', 'held_flower'],
   ocAvatar: initialProfile.ocAvatar || cloneStarterAvatar(),
 };
@@ -194,7 +198,7 @@ function syncActiveProfile() {
   Object.assign(profile, {
     activeTheme: state.activeTheme, completedThemes: state.completedThemes, learnedWords: state.learnedWords, wordProgress: state.wordProgress,
     stars: state.stars, dailyDate: todayKey, daily: state.daily, streak: state.streak,
-    recordingEnabled: state.recordingEnabled, world: state.world, achievements: state.achievements, study: state.study, ocOwned: state.ocOwned, ocAvatar: state.ocAvatar,
+    recordingEnabled: state.recordingEnabled, activityDates: state.activityDates, arcadeStats: state.arcadeStats, world: state.world, achievements: state.achievements, study: state.study, ocOwned: state.ocOwned, ocAvatar: state.ocAvatar,
   });
 }
 function persistProgress() {
@@ -221,7 +225,7 @@ function switchProfile(id) {
   state.stars = Number(profile.stars || 0);
   state.daily = dailyFor(profile);
   state.streak = profile.streak || { count: 0, lastCompletedDate: '' };
-  state.recordingEnabled = Boolean(profile.recordingEnabled); state.world = profile.world || {}; state.achievements = profile.achievements || []; state.study = profile.study || { date: todayKey, seconds: 0, limitMinutes: 5, backupAt: '' };
+  state.recordingEnabled = Boolean(profile.recordingEnabled); state.activityDates = profile.activityDates || []; state.world = profile.world || {}; state.achievements = profile.achievements || []; state.study = profile.study || { date: todayKey, seconds: 0, limitMinutes: 5, backupAt: '' };
   state.ocOwned = profile.ocOwned || [];
   state.ocAvatar = profile.ocAvatar || cloneStarterAvatar();
   state.round = 0; state.completed = false; state.roundLocked = false;
@@ -360,19 +364,22 @@ function routeFor(name) { return name === 'lesson' ? `#lesson/${state.activeThem
 function renderTopbarContext() {
   const crumb = $('#topbarLessonTitle');
   const isClosetContext = state.screen === 'closet' || state.screen === 'home' && state.homeContext === 'closet';
-  const label = isClosetContext ? '魔法屋' : currentTheme().title;
-  const isCurrentScreen = state.screen === 'lesson' || state.screen === 'closet';
+  const isArcadeContext = state.screen === 'arcade' || state.screen === 'home' && state.homeContext === 'arcade';
+  const label = isArcadeContext ? '小小游戏机' : (isClosetContext ? '魔法屋' : currentTheme().title);
+  const arcadeGameOpen = state.screen === 'arcade' && Boolean(state.arcadeGameId);
+  const isCurrentScreen = state.screen === 'lesson' || state.screen === 'closet' || state.screen === 'arcade' && !arcadeGameOpen;
   crumb.querySelector('b').textContent = label;
   crumb.disabled = isCurrentScreen;
-  crumb.setAttribute('aria-label', isCurrentScreen ? `当前位置：${label}` : `继续${label}`);
+  crumb.setAttribute('aria-label', arcadeGameOpen ? '返回小小游戏机大厅' : (isCurrentScreen ? `当前位置：${label}` : `继续${label}`));
 }
 function setScreen(name, { push = true } = {}) {
   refreshDailyBoundary();
   const previousScreen = state.screen;
   if (name === 'home' && previousScreen === 'closet') state.homeContext = 'closet';
+  else if (name === 'home' && previousScreen === 'arcade') state.homeContext = 'arcade';
   else if (name === 'home' && previousScreen === 'lesson') state.homeContext = 'lesson';
   if (state.screen === 'lesson' && name !== 'lesson') finishLessonSession();
-  if (name === 'lesson' && !canStartLesson()) { showToast('今天的探险时间已完成，明天再来吧！'); name = 'home'; }
+  if ((name === 'lesson' || name === 'arcade') && !canStartLesson()) { showToast('今天的探险时间已完成，明天再来吧！'); name = 'home'; }
   state.screen = name;
   if (push && location.hash !== routeFor(name)) history.pushState({ screen: name, theme: state.activeTheme }, '', routeFor(name));
   renderTopbarContext();
@@ -381,6 +388,7 @@ function setScreen(name, { push = true } = {}) {
   $$('.screen').forEach((screen) => screen.classList.toggle('active', screen.id === `${name}Screen`));
   $$('.nav-item').forEach((button) => button.classList.toggle('active', button.dataset.screen === name));
   if (name === 'lesson') { lessonSessionStartedAt = Date.now(); renderRound(); }
+  if (name === 'arcade') renderArcade();
   if (name === 'closet') { renderWardrobe(); setMagicHouseTab(state.magicHouseTab); }
   $('#main').focus({ preventScroll: true });
 }
@@ -391,6 +399,12 @@ function recordWordProgress(word, kind) { const key = `${state.activeTheme}:${wo
 function refreshAchievements() { unlockAchievementIds(state, masteredWordCount()).forEach((id) => { if (!state.achievements.includes(id)) { state.achievements.push(id); const label = ACHIEVEMENT_DEFINITIONS.find((item) => item.id === id)?.label || '新徽章'; showToast(`获得徽章：${label}！`); } }); }
 let lessonSessionStartedAt = null;
 function studyTodaySeconds() { return state.study.date === todayKey ? state.study.seconds : 0; }
+function markActivityToday() { state.activityDates = Array.from(new Set([...(state.activityDates || []), todayKey])).sort().slice(-90); }
+function renderStudyCalendar() {
+  const calendar = $('#studyCalendar'); if (!calendar) return;
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六']; const activeDates = new Set(state.activityDates || []); const today = new Date();
+  calendar.innerHTML = Array.from({ length: 7 }, (_, index) => { const date = new Date(today); date.setDate(today.getDate() - 6 + index); const key = localDateKey(date); const active = activeDates.has(key); return `<div class="${active ? 'active' : ''} ${key === todayKey ? 'today' : ''}"><i></i><span>${weekdays[date.getDay()]}</span></div>`; }).join('');
+}
 function finishLessonSession() { if (!lessonSessionStartedAt) return; state.study.seconds += Math.floor((Date.now() - lessonSessionStartedAt) / 1000); lessonSessionStartedAt = null; persistProgress(); }
 function canStartLesson() { const limit = Number(state.study.limitMinutes || 0); return !limit || studyTodaySeconds() < limit * 60; }
 function updateDailyStreak() {
@@ -410,7 +424,7 @@ function openDailyWrapUp() {
 function closeDailyWrapUp() { $('#dailyModal').classList.remove('open'); $('#dailyModal').setAttribute('aria-hidden', 'true'); }
 function setDailyTask(task) {
   if (state.daily[task]) return;
-  state.daily[task] = true;
+  state.daily[task] = true; markActivityToday();
   const finishedToday = state.daily.round && state.daily.theme && state.daily.dress && !state.daily.claimed;
   if (finishedToday) {
     state.daily.claimed = true;
@@ -453,7 +467,197 @@ function renderHome() {
     button.addEventListener('click', () => { state.lessonMode = button.dataset.lessonMode; state.round = 0; state.completed = false; renderHome(); });
   });
 }
+let arcadeSequenceTimer = null;
+let whackTimer = null;
+let catchTimer = null;
+function arcadeDailyPlays() { return Number(state.arcadeStats.dailyPlays?.[todayKey] || 0); }
+function openArcade() { state.arcadeGameId = ''; state.arcadeState = null; setScreen('arcade'); }
+function completeArcadeGame(name, { rhythmScore = 0, arrowScore = 0 } = {}) {
+  const stats = state.arcadeStats; const playedBefore = arcadeDailyPlays();
+  stats.dailyPlays = { ...(stats.dailyPlays || {}), [todayKey]: playedBefore + 1 }; stats.totalPlays = Number(stats.totalPlays || 0) + 1;
+  stats.bestRhythm = Math.max(Number(stats.bestRhythm || 0), rhythmScore);
+  stats.bestArrows = Math.max(Number(stats.bestArrows || 0), arrowScore);
+  stats.bestFruit = Math.max(Number(stats.bestFruit || 0), fruitScore);
+  stats.bestWhack = Math.max(Number(stats.bestWhack || 0), whackScore);
+  stats.bestCatch = Math.max(Number(stats.bestCatch || 0), catchScore);
+  Object.keys(stats.dailyPlays).sort().slice(0, -30).forEach((key) => delete stats.dailyPlays[key]);
+  const rewarded = playedBefore < 3;
+  if (rewarded) state.stars += 1;
+  setDailyTask('round'); persistProgress(); updateProgress();
+  showToast(rewarded ? `完成${name}，获得 1 颗魔法星！` : `完成${name}！今天的小游戏奖励已领取完。`);
+}
+function arcadeStatus(items) { return `<div class="arcade-status">${items.map(([label, value, tone = 'violet']) => `<span class="${tone}"><b>${value}</b>${label}</span>`).join('')}</div>`; }
+function renderArcade() {
+  renderTopbarContext();
+  const area = $('#arcadeArea');
+  if (!state.arcadeGameId) {
+    const daily = arcadeDailyPlays();
+    area.innerHTML = `<section class="arcade-hub"><div class="arcade-heading"><p class="section-kicker">小小游戏机</p><h1>今天想玩什么？</h1><p>每一局都是轻松的魔法复习。</p><div class="arcade-progress"><span>今日小游戏</span><b>${Math.min(daily, 3)} / 3</b><i style="--arcade-progress:${Math.min(daily, 3) / 3 * 100}%"></i></div></div><div class="arcade-game-grid">${ARCADE_GAMES.map((game) => `<button class="arcade-game-card arcade-game-${game.id}" type="button" data-arcade-game="${game.id}"><b>${game.icon}</b><span><strong>${game.name}</strong><small>${game.description}</small><em>${game.meta}</em></span></button>`).join('')}</div><div class="arcade-best-list">${state.arcadeStats.bestRhythm ? `<span>节奏最高 ${state.arcadeStats.bestRhythm} 轮</span>` : ''}${state.arcadeStats.bestArrows ? `<span>箭头最高 ${state.arcadeStats.bestArrows} 个</span>` : ''}${state.arcadeStats.bestFruit ? `<span>切切乐最高 ${state.arcadeStats.bestFruit} 分</span>` : ''}</div></section>`;
+    $$('[data-arcade-game]', area).forEach((button) => button.addEventListener('click', () => { state.arcadeGameId = button.dataset.arcadeGame; state.arcadeState = null; renderArcade(); }));
+    return;
+  }
+  if (state.arcadeGameId === 'memory') renderMemoryGame(area);
+  if (state.arcadeGameId === 'listen') renderListeningGame(area);
+  if (state.arcadeGameId === 'numbers') renderNumberGame(area);
+  if (state.arcadeGameId === 'colors') renderColorGame(area);
+  if (state.arcadeGameId === 'rhythm') renderRhythmGame(area);
+  if (state.arcadeGameId === 'match') renderMatchGame(area);
+  if (state.arcadeGameId === 'arrows') renderArrowGame(area);
+  if (state.arcadeGameId === 'fruit') renderFruitGame(area);
+  if (state.arcadeGameId === 'whack') renderWhackGame(area);
+  if (state.arcadeGameId === 'catch') renderCatchGame(area);
+  if (state.arcadeGameId === 'lights') renderLightsGame(area);
+  if (state.arcadeGameId === 'tictactoe') renderTicTacToeGame(area);
+  if (['game2048', 'hanoi', 'klotski', 'sudoku', 'bulls'].includes(state.arcadeGameId)) renderVendorMiniGame(area, state.arcadeGameId);
+}
+function arcadeFrame(title, description, body) { return `<section class="arcade-play"><p class="section-kicker">${title}</p><h1>${description}</h1>${body}</section>`; }
+function bindArcadeBack() { /* Return to the arcade uses the global Magic Castle breadcrumb. */ }
+function finishArcadeRound(name, options) { completeArcadeGame(name, options); window.setTimeout(() => { state.arcadeState = null; state.arcadeGameId = ''; renderArcade(); }, 700); }
+function renderMemoryGame(area) {
+  if (!state.arcadeState) state.arcadeState = { deck: createMemoryDeck(), open: [], matched: [] };
+  const game = state.arcadeState;
+  area.innerHTML = arcadeFrame('魔法翻翻乐', '翻开两张一样的卡片', `<div class="memory-grid">${game.deck.map((card, index) => { const visible = game.open.includes(index) || game.matched.includes(card.id); return `<button class="memory-card ${visible ? 'open' : ''} ${game.matched.includes(card.id) ? 'matched' : ''}" type="button" data-memory-index="${index}" ${visible ? 'disabled' : ''}>${visible ? `<img src="${card.image}" alt="${card.label}" /><span>${card.label}</span>` : '<b>✦</b>'}</button>`; }).join('')}</div>`);
+  bindArcadeBack();
+  $$('[data-memory-index]', area).forEach((button) => button.addEventListener('click', () => {
+    const index = Number(button.dataset.memoryIndex); game.open.push(index); renderMemoryGame(area);
+    if (game.open.length !== 2) return;
+    const [first, second] = game.open; const isMatch = game.deck[first].id === game.deck[second].id;
+    window.setTimeout(() => { if (isMatch) game.matched.push(game.deck[first].id); game.open = []; if (game.matched.length === 3) { finishArcadeRound('魔法翻翻乐'); return; } renderArcade(); }, 650);
+  }));
+}
+function renderListeningGame(area) {
+  if (!state.arcadeState) state.arcadeState = createListeningRound();
+  const game = state.arcadeState;
+  area.innerHTML = arcadeFrame('听音找一找', '听一听，找到正确图片', `<button class="arcade-listen" id="arcadeListen" type="button">再听一遍 <span>R</span></button><div class="arcade-picture-choices">${game.choices.map((item) => `<button type="button" data-arcade-choice="${item.id}"><img src="${item.image}" alt="${item.label}" /><b>${item.label}</b></button>`).join('')}</div>`);
+  const replay = () => speak(game.answer.id); $('#arcadeListen').addEventListener('click', replay); window.setTimeout(replay, 120); bindArcadeBack();
+  $$('[data-arcade-choice]', area).forEach((button) => button.addEventListener('click', () => { if (button.dataset.arcadeChoice === game.answer.id) { button.classList.add('correct'); finishArcadeRound('听音找一找'); } else { button.classList.add('wrong'); button.disabled = true; } }));
+}
+function renderNumberGame(area) {
+  if (!state.arcadeState) state.arcadeState = createNumberRound();
+  const game = state.arcadeState;
+  area.innerHTML = arcadeFrame('数字泡泡', `找到数字 ${game.answer}`, `<div class="number-bubbles">${game.choices.map((number) => `<button class="number-bubble bubble-${number}" type="button" data-number-choice="${number}">${number}</button>`).join('')}</div>`);
+  bindArcadeBack(); window.setTimeout(() => speak(String(game.answer)), 120);
+  $$('[data-number-choice]', area).forEach((button) => button.addEventListener('click', () => { if (Number(button.dataset.numberChoice) === game.answer) { button.classList.add('correct'); finishArcadeRound('数字泡泡'); } else { button.classList.add('wrong'); button.disabled = true; } }));
+}
+function renderColorGame(area) {
+  if (!state.arcadeState) state.arcadeState = createColorRound();
+  const game = state.arcadeState;
+  area.innerHTML = arcadeFrame('颜色魔法', '听到颜色后，点中正确魔法色', `<button class="arcade-listen" id="arcadeColorListen" type="button">再听一遍 <span>R</span></button><div class="arcade-color-choices">${game.choices.map((item) => `<button style="--arcade-color:${item.color}" type="button" data-color-choice="${item.id}"><i></i><b>${item.label}</b></button>`).join('')}</div>`);
+  const replay = () => speak(game.answer.id); $('#arcadeColorListen').addEventListener('click', replay); window.setTimeout(replay, 120); bindArcadeBack();
+  $$('[data-color-choice]', area).forEach((button) => button.addEventListener('click', () => { if (button.dataset.colorChoice === game.answer.id) { button.classList.add('correct'); finishArcadeRound('颜色魔法'); } else { button.classList.add('wrong'); button.disabled = true; } }));
+}
+function renderRhythmGame(area) {
+  if (!state.arcadeState) state.arcadeState = { sequence: [nextRhythmColor(), nextRhythmColor(), nextRhythmColor()], input: [], round: 1, showing: true };
+  const game = state.arcadeState;
+  area.innerHTML = arcadeFrame('星星节奏', game.showing ? '看一看，记住闪亮顺序' : `第 ${game.round} 轮，跟着点一遍`, `<div class="rhythm-grid">${['violet', 'gold', 'sky', 'pink'].map((color) => `<button class="rhythm-pad ${color}" type="button" data-rhythm-color="${color}" ${game.showing ? 'disabled' : ''}></button>`).join('')}</div><p class="rhythm-copy">${game.showing ? '魔法星星正在闪亮…' : `已经点了 ${game.input.length} / ${game.sequence.length} 个`}</p>`);
+  bindArcadeBack();
+  const pads = (color) => $$('.rhythm-pad', area).filter((button) => button.dataset.rhythmColor === color);
+  if (game.showing) {
+    let index = 0;
+    const flash = () => { if (index >= game.sequence.length) { game.showing = false; renderRhythmGame(area); return; } const pad = pads(game.sequence[index])[0]; pad?.classList.add('flash'); arcadeSequenceTimer = window.setTimeout(() => { pad?.classList.remove('flash'); index += 1; arcadeSequenceTimer = window.setTimeout(flash, 180); }, 420); };
+    arcadeSequenceTimer = window.setTimeout(flash, 500); return;
+  }
+  $$('[data-rhythm-color]', area).forEach((button) => button.addEventListener('click', () => {
+    const color = button.dataset.rhythmColor; const expected = game.sequence[game.input.length];
+    if (color !== expected) { button.classList.add('wrong'); game.input = []; window.setTimeout(() => { game.showing = true; renderRhythmGame(area); }, 500); return; }
+    button.classList.add('flash'); game.input.push(color);
+    if (game.input.length === game.sequence.length) {
+      if (game.round >= 3) { finishArcadeRound('星星节奏', { rhythmScore: game.sequence.length }); return; }
+      game.round += 1; game.sequence.push(nextRhythmColor()); game.input = []; window.setTimeout(() => { game.showing = true; renderRhythmGame(area); }, 500);
+    }
+  }));
+}
+function renderMatchGame(area) {
+  area.innerHTML = arcadeFrame('魔法消消乐', '连接三个或更多相同宝石', `<div class="match-game-shell"><iframe id="matchGameFrame" src="vendor/match-3-game/index.html" title="魔法消消乐" loading="eager"></iframe></div><p class="arcade-rule">拖动相邻宝石，连成三个或更多同色宝石即可消除。</p>`);
+  bindArcadeBack();
+}
+function arrowMoveResult(arrow, arrows, size) {
+  const delta = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] }[arrow.direction];
+  let row = arrow.row + delta[0]; let col = arrow.col + delta[1]; let steps = 1;
+  while (row >= 0 && row < size && col >= 0 && col < size) {
+    if (arrows.some((item) => item.id !== arrow.id && item.row === row && item.col === col)) return { blocked: true, steps, dx: delta[1], dy: delta[0] };
+    row += delta[0]; col += delta[1]; steps += 1;
+  }
+  return { blocked: false, steps, dx: delta[1], dy: delta[0] };
+}
+function renderArrowGame(area) {
+  if (!state.arcadeState) state.arcadeState = { size: ARCADE_BOARD_SIZE, arrows: createArrowBoard(ARCADE_BOARD_SIZE), cleared: 0, failures: 0, moving: null };
+  const game = state.arcadeState;
+  area.innerHTML = arcadeFrame('箭头快跑', '点击箭头，让它冲向边框', `${arcadeStatus([['剩余', game.arrows.length, 'violet'], ['已消除', game.cleared, 'sky'], ['失误', `${game.failures}/3`, game.failures ? 'pink' : 'gold']])}<div class="arrow-grid" style="--arrow-grid:${game.size}">${game.arrows.map((arrow) => { const moving = game.moving?.id === arrow.id; const movement = moving ? game.moving : null; return `<button class="arrow-tile ${moving ? `moving ${movement.blocked ? 'blocked-move' : 'exit-move'}` : ''}" type="button" data-arrow-id="${arrow.id}" style="--arrow-move-x:${movement ? movement.dx * movement.steps * 100 : 0}%;--arrow-move-y:${movement ? movement.dy * movement.steps * 100 : 0}%"><span>${{ up: '↑', down: '↓', left: '←', right: '→' }[arrow.direction]}</span></button>`; }).join('')}</div><p class="arcade-rule">箭头会沿方向移动：碰到其它箭头算失误，成功冲出边框才会消除。</p>`);
+  bindArcadeBack();
+  $$('[data-arrow-id]', area).forEach((button) => button.addEventListener('click', () => {
+    if (game.moving) return;
+    const arrow = game.arrows.find((item) => item.id === button.dataset.arrowId); const movement = arrowMoveResult(arrow, game.arrows, game.size);
+    game.moving = { id: arrow.id, ...movement }; renderArrowGame(area);
+    window.setTimeout(() => {
+      if (movement.blocked) {
+        game.failures += 1;
+        if (game.failures >= 3) { state.arcadeState = null; showToast('撞到其它箭头了，本局结束！'); renderArcade(); return; }
+      } else { game.arrows = game.arrows.filter((item) => item.id !== arrow.id); game.cleared += 1; }
+      game.moving = null;
+      if (!movement.blocked && !game.arrows.length) { finishArcadeRound('箭头快跑', { arrowScore: game.cleared }); return; }
+      renderArrowGame(area);
+    }, 420);
+  }));
+}
+function distanceToSegment(point, start, end) {
+  const dx = end.x - start.x; const dy = end.y - start.y;
+  const lengthSquared = dx * dx + dy * dy;
+  const t = lengthSquared ? Math.max(0, Math.min(1, ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared)) : 0;
+  const closest = { x: start.x + t * dx, y: start.y + t * dy };
+  return Math.hypot(point.x - closest.x, point.y - closest.y);
+}
+const VENDOR_MINI_GAMES = {
+  fruit: { title: '水果魔法切切乐', description: '原始水果切切乐 UI', src: 'vendor/mini-games/fruitninjia/index.html' },
+  whack: { title: '打地鼠', description: '看准了敲！别让地鼠跑掉', src: 'vendor/mini-games/whac-a-mole.html' },
+  catch: { title: '接水果', description: '移动篮子，接住落下的水果', src: 'vendor/mini-games/library/fruit-catch.html' },
+  game2048: { title: '2048', description: '经典合并数字挑战', src: 'vendor/mini-games/library/2048.html' },
+  hanoi: { title: '汉诺塔', description: '移动圆盘到目标柱', src: 'vendor/mini-games/library/hanoi.html' },
+  klotski: { title: '华容道', description: '经典横刀立马布局', src: 'vendor/mini-games/library/klotski.html' },
+  sudoku: { title: '数独', description: '4×4 入门数独填数', src: 'vendor/mini-games/library/sudoku.html' },
+  bulls: { title: '猜数字', description: '推理出隐藏的 4 位数字', src: 'vendor/mini-games/library/bulls-and-cows.html' },
+};
+function renderVendorMiniGame(area, gameId) {
+  const game = VENDOR_MINI_GAMES[gameId];
+  area.innerHTML = arcadeFrame(game.title, game.description, `<div class="mini-game-frame vendor-${gameId}"><iframe src="${game.src}" title="${game.title}" loading="eager"></iframe></div>`);
+  bindArcadeBack();
+}
+function renderFruitGame(area) { renderVendorMiniGame(area, 'fruit'); }
+function renderWhackGame(area) {
+  area.innerHTML = arcadeFrame('打地鼠', '看准了敲！别让地鼠跑掉', `<div class="mini-game-frame"><iframe src="vendor/mini-games/whac-a-mole.html" title="打地鼠"></iframe></div><p class="arcade-rule">点击“开始游戏”后，看见地鼠就马上敲它。</p>`);
+  bindArcadeBack();
+}
+function renderCatchGame(area) { renderVendorMiniGame(area, 'catch'); }
+function toggleLights(board, index, size = 4) {
+  const row = Math.floor(index / size); const col = index % size;
+  [[row, col], [row - 1, col], [row + 1, col], [row, col - 1], [row, col + 1]].forEach(([r, c]) => { if (r >= 0 && r < size && c >= 0 && c < size) board[r * size + c] = !board[r * size + c]; });
+}
+function renderLightsGame(area) {
+  if (!state.arcadeState) state.arcadeState = { size: 4, board: createLightsBoard(4), moves: 0 };
+  const game = state.arcadeState;
+  area.innerHTML = arcadeFrame('点灯游戏', `熄灭全部灯光 · ${game.size}×${game.size}`, `<div class="lights-difficulty" role="group" aria-label="点灯游戏难度"><button type="button" class="${game.size === 4 ? 'active' : ''}" data-light-size="4">入门 4×4</button><button type="button" class="${game.size === 5 ? 'active' : ''}" data-light-size="5">普通 5×5</button><button type="button" class="${game.size === 6 ? 'active' : ''}" data-light-size="6">挑战 6×6</button></div>${arcadeStatus([['还亮', game.board.filter(Boolean).length, 'gold'], ['步数', game.moves, 'violet']])}<div class="lights-grid" style="--lights-grid:${game.size}">${game.board.map((on, index) => `<button class="light-tile ${on ? 'on' : ''}" type="button" data-light-index="${index}"><i></i></button>`).join('')}</div><p class="arcade-rule">点击一格会翻转自己和上下左右，熄灭全部灯光即可完成。</p>`);
+  bindArcadeBack();
+  $$('[data-light-size]', area).forEach((button) => button.addEventListener('click', () => { const size = Number(button.dataset.lightSize); state.arcadeState = { size, board: createLightsBoard(size), moves: 0 }; renderLightsGame(area); }));
+  $$('[data-light-index]', area).forEach((button) => button.addEventListener('click', () => { toggleLights(game.board, Number(button.dataset.lightIndex), game.size); game.moves += 1; if (game.board.every((light) => !light)) { finishArcadeRound('点灯游戏'); return; } renderLightsGame(area); }));
+}
+function ticWinner(board, mark) { const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; return lines.some((line) => line.every((index) => board[index] === mark)); }
+function renderTicTacToeGame(area) {
+  if (!state.arcadeState) state.arcadeState = { board: Array(9).fill(''), turn: 'X', message: '轮到你了' };
+  const game = state.arcadeState;
+  area.innerHTML = arcadeFrame('井字棋', game.message, `<div class="tic-grid">${game.board.map((mark, index) => `<button class="tic-cell ${mark ? `mark-${mark}` : ''}" type="button" data-tic-index="${index}" ${mark || game.turn !== 'X' ? 'disabled' : ''}>${mark}</button>`).join('')}</div><p class="arcade-rule">你是 X，露娜是 O。先连成三个就赢啦。</p>`);
+  bindArcadeBack();
+  $$('[data-tic-index]', area).forEach((button) => button.addEventListener('click', () => {
+    const index = Number(button.dataset.ticIndex); game.board[index] = 'X';
+    if (ticWinner(game.board, 'X')) { game.message = '你赢啦！'; finishArcadeRound('井字棋'); return; }
+    const empty = game.board.map((value, i) => value ? null : i).filter((value) => value !== null); if (!empty.length) { game.message = '平局，再来一局吧！'; window.setTimeout(() => { state.arcadeState = null; renderArcade(); }, 700); return; }
+    const winMove = (mark) => empty.find((candidate) => { game.board[candidate] = mark; const win = ticWinner(game.board, mark); game.board[candidate] = ''; return win; });
+    const ai = winMove('O') ?? winMove('X') ?? empty[Math.floor(Math.random() * empty.length)]; game.board[ai] = 'O';
+    if (ticWinner(game.board, 'O')) { game.message = '露娜赢啦，再试一次！'; window.setTimeout(() => { state.arcadeState = null; renderArcade(); }, 700); return; }
+    renderTicTacToeGame(area);
+  }));
+}
 function selectTheme(id, goToLesson = true) {
+  if (id === 'animal') { openArcade(); return; }
   if (state.lessonMode === 'review' && !state.completedThemes.includes(id)) { showToast('先完成这个主题的单词学习，再来复习吧。'); return; }
   state.activeTheme = id; state.round = 0; state.completed = false; state.roundLocked = false;
   persistProgress(); renderHome();
@@ -711,10 +915,17 @@ function renderMagicHouseBook() {
   $('#magicHouseBookContent').innerHTML = entries.length ? groups.map(([label, words]) => words.length ? `<section><h3>${label}</h3><div>${words.map(({ word }) => `<article><b>${word}</b><span>${label}</span></article>`).join('')}</div></section>` : '').join('') : '<p class="hanzi-book-empty">先去汉字图书塔完成探险吧。</p>';
 }
 function renderMagicHouseAchievements() {
-  $('#magicHouseAchievementContent').innerHTML = ACHIEVEMENT_DEFINITIONS.map(({ id, label }) => `<article class="${state.achievements.includes(id) ? 'earned' : ''}"><b>${state.achievements.includes(id) ? '✦' : '○'}</b><span>${label}</span><small>${state.achievements.includes(id) ? '已获得' : '继续探险解锁'}</small></article>`).join('');
+  $('#magicHouseAchievementContent').innerHTML = ACHIEVEMENT_DEFINITIONS.map(({ id, label, condition }) => `<article class="${state.achievements.includes(id) ? 'earned' : ''}"><b>${state.achievements.includes(id) ? '✦' : '○'}</b><span>${label}</span><small>${state.achievements.includes(id) ? '已获得' : condition}</small></article>`).join('');
+}
+function renderMagicHouseCounts() {
+  const ownedCount = state.ocOwned.length + 1; const totalOutfits = OC_WARDROBE.length + OC_PART_OPTIONS.hair.length;
+  const hanziCount = Object.keys(state.wordProgress).filter((key) => key.startsWith('hanzi:')).length;
+  $('#magicHouseCountCloset').textContent = `${ownedCount}/${totalOutfits}`;
+  $('#magicHouseCountBook').textContent = hanziCount;
+  $('#magicHouseCountAchievements').textContent = `${state.achievements.length}/${ACHIEVEMENT_DEFINITIONS.length}`;
 }
 function setMagicHouseTab(tab) {
-  const next = ['closet', 'book', 'achievements'].includes(tab) ? tab : 'closet'; state.magicHouseTab = next;
+  const next = ['closet', 'book', 'achievements'].includes(tab) ? tab : 'closet'; state.magicHouseTab = next; renderMagicHouseCounts();
   $$('[data-magic-house-tab]').forEach((button) => { const active = button.dataset.magicHouseTab === next; button.classList.toggle('active', active); button.setAttribute('aria-selected', String(active)); });
   $$('.magic-house-panel').forEach((panel) => { panel.hidden = panel.id !== `magicHousePanel${next[0].toUpperCase()}${next.slice(1)}`; });
   if (next === 'closet') renderWardrobe();
@@ -726,7 +937,7 @@ function renderWardrobe() {
   $('#ocCollectionCount').textContent = `${state.ocOwned.length + 1} / ${OC_WARDROBE.length + OC_PART_OPTIONS.hair.length}`;
   const category = OC_CATEGORY_META.find((item) => item.id === state.ocTab);
   $('#ocLookName').textContent = '点一点右边的装扮，给露娜换新造型。';
-  renderOcTabs(); renderOcItems();
+  renderOcTabs(); renderOcItems(); renderMagicHouseCounts();
 }
 function renderOcTabs() {
   $('#ocCategoryTabs').innerHTML = OC_CATEGORY_META.map((category) => `<button class="oc-category-tab ${state.ocTab === category.id ? 'active' : ''}" type="button" data-oc-tab="${category.id}">${wardrobeIcon(category.id)}<span>${category.label}</span></button>`).join('');
@@ -794,6 +1005,8 @@ function renderParentProfileControls() {
   $('#parentStudyToday').textContent = `今天已探险 ${Math.floor(studyTodaySeconds() / 60)} 分钟`; $('#parentAchievements').textContent = state.achievements.length;
   renderDailyLimitControl();
   renderSpeechRateControl();
+  renderStudyCalendar();
+  $('#appVersion').textContent = `v${BUILD_INFO.version}`;
   updateProgress();
 }
 let parentActiveTab = 'overview';
@@ -927,7 +1140,7 @@ async function importProgress(file) {
 
 $$('[data-screen]').forEach((button) => button.addEventListener('click', () => setScreen(button.dataset.screen)));
 $$('[data-magic-house-tab]').forEach((button) => button.addEventListener('click', () => setMagicHouseTab(button.dataset.magicHouseTab)));
-$('#topbarLessonTitle').addEventListener('click', () => { if (state.screen === 'home') setScreen(state.homeContext === 'closet' ? 'closet' : 'lesson'); });
+$('#topbarLessonTitle').addEventListener('click', () => { if (state.screen === 'arcade' && state.arcadeGameId) { clearTimeout(arcadeSequenceTimer); clearTimeout(whackTimer); clearTimeout(catchTimer); state.arcadeGameId = ''; state.arcadeState = null; renderTopbarContext(); renderArcade(); return; } if (state.screen === 'home') setScreen(state.homeContext === 'closet' ? 'closet' : state.homeContext === 'arcade' ? 'arcade' : 'lesson'); });
 $('#magicHouse').addEventListener('click', () => { setScreen('closet'); showToast('欢迎来到魔法屋，给露娜换上新装吧！'); });
 $('#soundToggle').addEventListener('click', () => { state.soundOn = !state.soundOn; $('#soundToggle').setAttribute('aria-pressed', String(state.soundOn)); $('#soundToggle').setAttribute('aria-label', state.soundOn ? '关闭声音' : '打开声音'); $('#soundToggle').classList.toggle('muted', !state.soundOn); if (!state.soundOn) { window.speechSynthesis?.cancel(); stopNativeTts(); stopWardrobeMusic(); } else if (state.screen === 'closet') startWardrobeMusic(); });
 $('#parentButton').addEventListener('click', openParent); $('#closeParent').addEventListener('click', closeParent); $('#disableParentMode').addEventListener('click', disableParentMode);
@@ -962,6 +1175,16 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     });
   });
 }
+$('#checkForUpdate').addEventListener('click', async () => {
+  const button = $('#checkForUpdate'); button.disabled = true; button.textContent = '检查中…';
+  try {
+    const response = await fetch(`https://api.github.com/repos/${BUILD_INFO.releaseRepository}/releases/latest`, { headers: { Accept: 'application/vnd.github+json' } });
+    if (!response.ok) throw new Error('release lookup failed');
+    const latest = (await response.json()).tag_name?.replace(/^v/, '') || '';
+    showToast(latest && latest !== BUILD_INFO.version ? `发现 v${latest}，请前往 GitHub Release 更新。` : '已经是最新版本。');
+  } catch { showToast('暂时无法检查更新，请稍后再试。'); }
+  finally { button.disabled = false; button.textContent = '检查更新'; }
+});
 $('#voiceTest').addEventListener('click', () => { chooseEnglishVoice(); speak(`Hello, ${childName()}! I am Luna. Let us learn English together.`); });
 $('#claimReward').addEventListener('click', () => { closeReward(); $('#newDot').hidden = false; setScreen('closet'); showToast('新的 OC-English 装扮已经放进衣橱！'); });
 $('#dailyWrapHome').addEventListener('click', () => { closeDailyWrapUp(); setScreen('home'); });
@@ -969,7 +1192,7 @@ $('#dailyWrapCloset').addEventListener('click', () => { closeDailyWrapUp(); setS
 $('#parentModal').addEventListener('click', (event) => { if (event.target === $('#parentModal')) closeParent(); });
 $('#resetProgress').addEventListener('click', () => { state.round = 0; state.completed = false; state.roundLocked = false; closeParent(); setScreen('home'); showToast('今天的挑战已经从第一关重新开始。'); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshDailyBoundary(); });
-window.addEventListener('popstate', () => { const [,screen = 'home', theme] = location.hash.match(/^#([^/]+)\/?(.*)?/) || []; if (theme && THEMES[theme]) state.activeTheme = theme; setScreen(['home','lesson','closet'].includes(screen) ? screen : 'home', { push: false }); });
+window.addEventListener('popstate', () => { const [,screen = 'home', theme] = location.hash.match(/^#([^/]+)\/?(.*)?/) || []; if (theme && THEMES[theme]) state.activeTheme = theme; setScreen(['home','lesson','closet','arcade'].includes(screen) ? screen : 'home', { push: false }); });
 document.addEventListener('keydown', handleLessonShortcuts);
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('#recitalConfigModal').classList.contains('open')) closeRecitalConfig(); else if (event.key === 'Escape' && $('#contentConfigModal').classList.contains('open')) closeContentConfig(); else if (event.key === 'Escape' && $('#parentModal').classList.contains('open')) closeParent(); else if (event.key === 'Escape' && $('#rewardModal').classList.contains('open')) closeReward(); else if (event.key === 'Escape' && $('#dailyModal').classList.contains('open')) closeDailyWrapUp(); else if (event.key === 'Escape' && $('#adminModal').classList.contains('open')) closeAdmin(); });
 
